@@ -13,6 +13,24 @@ The goal is to automate:
 
 ---
 
+## 📜 Speckit Constitution
+
+- Purpose: establish shared rules for scope, decisions, quality, and delivery.
+- Scope: this spec covers MVP for shared subscription debt management.
+- Non-Goals: external banking integrations; complex payment automation beyond manual/verified flows.
+- Decision Principles: simplicity first, security by default, testability, infra-as-code, least privilege.
+- Roles: product owner validates scope; tech lead owns architecture; contributors follow this constitution.
+- Change Management: open PR with spec delta; record rationale; require 1 approval (PO or tech lead).
+- Definition of Done: spec updated; code implemented; tests added/green; docs updated; CI passing.
+- Quality Gates: lint/type-check; unit ≥ 80% coverage; integration paths for auth, charges, payments.
+- Security & Privacy: hashed passwords; RBAC; HTTPS; rate limiting; audit logs for critical actions.
+- Testing Policy: unit (services, utils), integration (API + DB), E2E (critical flows) on CI.
+- Documentation & Traceability: changelog in PR; link tasks/issues; API docs updated.
+- Communication Cadence: async via PRs; weekly sync review; immediate escalation for blockers/security.
+- Approval: product owner signs off on scope; tech lead signs off on architecture & security.
+
+---
+
 ## 🧭 Main User Stories
 
 ### **Administrator**
