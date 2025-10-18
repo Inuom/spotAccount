@@ -1,0 +1,28 @@
+# spotAccount Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-10-18
+
+## Active Technologies
+- Node.js 18+ (backend), TypeScript 5+ (frontend) + NestJS (backend), Angular 17+ (frontend), Prisma (ORM), SQLite (database) (001-shared-subscription-spec)
+- Node.js 18+ (backend), TypeScript 5+ (frontend) + NestJS (backend), Angular 17+ (frontend), NgRx (state management), Prisma (ORM), SQLite (database) (001-shared-subscription-spec)
+- SQLite with file storage for data persistence (001-shared-subscription-spec)
+
+## Project Structure
+```
+backend/
+frontend/
+tests/
+```
+
+## Commands
+npm test; npm run lint
+
+## Code Style
+Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions
+
+## Recent Changes
+- 001-shared-subscription-spec: Added Node.js 18+ (backend), TypeScript 5+ (frontend) + NestJS (backend), Angular 17+ (frontend), NgRx (state management), Prisma (ORM), SQLite (database)
+- 001-shared-subscription-spec: Added Node.js 18+ (backend), TypeScript 5+ (frontend) + NestJS (backend), Angular 17+ (frontend), Prisma (ORM), SQLite (database)
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

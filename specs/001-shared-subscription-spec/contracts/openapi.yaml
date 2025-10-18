@@ -1,0 +1,846 @@
+openapi: 3.0.3
+info:
+  title: Shared Subscription Debt Manager API
+  description: API for managing shared subscription debts and payments
+  version: 1.0.0
+  contact:
+    name: Development Team
+    email: dev@example.com
+
+servers:
+  - url: https://api.shared-subscription.com/v1
+    description: Production server
+  - url: https://staging-api.shared-subscription.com/v1
+    description: Staging server
+
+paths:
+  # Authentication endpoints
+  /auth/login:
+    post:
+      summary: User login
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+        '400':
+          description: Invalid request
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+        '401':
+          description: Invalid token
+
+  # User management endpoints
+  /users:
+    get:
+      summary: List all users
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, user]
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+    post:
+      summary: Create new user
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, name, password, role]
+              properties:
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+                role:
+                  type: string
+                  enum: [admin, user]
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    patch:
+      summary: Update user
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, user]
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    delete:
+      summary: Delete user
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+
+  # Subscription management endpoints
+  /subscriptions:
+    get:
+      summary: List subscriptions
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscription'
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Create subscription
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, total_amount, billing_day, participants]
+              properties:
+                title:
+                  type: string
+                total_amount:
+                  type: number
+                  format: decimal
+                billing_day:
+                  type: integer
+                  minimum: 1
+                  maximum: 31
+                participants:
+                  type: array
+                  items:
+                    type: object
+                    required: [user_id, share_type]
+                    properties:
+                      user_id:
+                        type: string
+                        format: uuid
+                      share_type:
+                        type: string
+                        enum: [equal, custom]
+                      share_value:
+                        type: number
+                        format: decimal
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '400':
+          description: Invalid request
+
+  /subscriptions/{id}:
+    get:
+      summary: Get subscription by ID
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Subscription details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '404':
+          description: Subscription not found
+
+    patch:
+      summary: Update subscription
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                total_amount:
+                  type: number
+                  format: decimal
+                billing_day:
+                  type: integer
+                  minimum: 1
+                  maximum: 31
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Subscription updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '404':
+          description: Subscription not found
+
+  # Charge management endpoints
+  /subscriptions/{id}/generate-charges:
+    post:
+      summary: Generate charges for subscription
+      tags: [Charges]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: until
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '201':
+          description: Charges generated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Charge'
+        '400':
+          description: Invalid request
+        '404':
+          description: Subscription not found
+
+  /charges:
+    get:
+      summary: List charges
+      tags: [Charges]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: subscription_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of charges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Charge'
+
+  /charges/{id}/shares:
+    get:
+      summary: Get charge shares
+      tags: [Charges]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Charge shares
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChargeShare'
+
+  # Payment management endpoints
+  /payments:
+    get:
+      summary: List payments
+      tags: [Payments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, verified, cancelled]
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+
+    post:
+      summary: Create payment
+      tags: [Payments]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, amount, scheduled_date]
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                charge_id:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                  format: decimal
+                currency:
+                  type: string
+                  default: EUR
+                scheduled_date:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          description: Invalid request
+
+  /payments/{id}:
+    patch:
+      summary: Update payment
+      tags: [Payments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: decimal
+                scheduled_date:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          description: Invalid request
+        '403':
+          description: Cannot modify verified payment
+
+    delete:
+      summary: Delete payment
+      tags: [Payments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Payment deleted
+        '403':
+          description: Cannot delete verified payment
+
+  /payments/{id}/verify:
+    patch:
+      summary: Verify payment
+      tags: [Payments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                verification_reference:
+                  type: string
+      responses:
+        '200':
+          description: Payment verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          description: Invalid request
+        '403':
+          description: Forbidden
+
+  # Report endpoints
+  /reports/summary:
+    get:
+      summary: Get summary report
+      tags: [Reports]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Summary report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummaryReport'
+
+  /reports/user/{id}/balance:
+    get:
+      summary: Get user balance
+      tags: [Reports]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: User balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserBalance'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, user]
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        total_amount:
+          type: number
+          format: decimal
+        billing_day:
+          type: integer
+        frequency:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Charge:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        subscription_id:
+          type: string
+          format: uuid
+        period_start:
+          type: string
+          format: date
+        period_end:
+          type: string
+          format: date
+        amount_total:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [pending, generated, cancelled]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ChargeShare:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        charge_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        amount_due:
+          type: number
+          format: decimal
+        amount_paid:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [open, settled]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        charge_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        scheduled_date:
+          type: string
+          format: date
+        created_by:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, verified, cancelled]
+        verification_reference:
+          type: string
+        verified_at:
+          type: string
+          format: date-time
+        verified_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SummaryReport:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        total_due:
+          type: number
+          format: decimal
+        total_paid:
+          type: number
+          format: decimal
+        pending_payments:
+          type: number
+          format: decimal
+        user_balances:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserBalance'
+
+    UserBalance:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        user_name:
+          type: string
+        amount_due:
+          type: number
+          format: decimal
+        amount_paid:
+          type: number
+          format: decimal
+        balance:
+          type: number
+          format: decimal
+        pending_payments:
+          type: number
+          format: decimal
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
