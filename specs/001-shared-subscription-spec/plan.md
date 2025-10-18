@@ -10,20 +10,21 @@
 **Primary Requirement**: Build a shared subscription debt manager for small groups (5-20 users) to automate debt tracking, calculations, and reimbursements for shared subscriptions.
 
 **Technical Approach**: 
-- **Backend**: NestJS with TypeScript, SQLite database, Prisma ORM
+- **Backend**: NestJS with TypeScript, PostgreSQL database, Prisma ORM
 - **Frontend**: Angular 17+ SPA with NgRx state management, smart/dumb component architecture
 - **State Management**: NgRx with feature-based modules, effects for HTTP calls, selectors for viewmodels
-- **Infrastructure**: AWS Fargate + S3+CloudFront, Terraform IaC, GitHub Actions CI/CD
+- **Infrastructure**: AWS Fargate + S3+CloudFront, AWS RDS PostgreSQL, Terraform IaC, GitHub Actions CI/CD
 - **Architecture**: Modular web application with REST API, JWT authentication, RBAC, no state persistence
 - **Testing**: 80% coverage with Jest (unit/integration) and Cypress (E2E)
+- **Development**: Docker Compose with PostgreSQL for local development consistency
 
 ## Technical Context
 
 **Language/Version**: Node.js 18+ (backend), TypeScript 5+ (frontend)  
-**Primary Dependencies**: NestJS (backend), Angular 17+ (frontend), NgRx (state management), Prisma (ORM), SQLite (database)  
-**Storage**: SQLite with file storage for data persistence  
+**Primary Dependencies**: NestJS (backend), Angular 17+ (frontend), NgRx (state management), Prisma (ORM), PostgreSQL (database)  
+**Storage**: PostgreSQL with AWS RDS for production, Docker Compose for development  
 **Testing**: Jest (unit/integration), Cypress (E2E), 80% coverage requirement  
-**Target Platform**: AWS Fargate (backend), S3+CloudFront (frontend)  
+**Target Platform**: AWS Fargate (backend), S3+CloudFront (frontend), AWS RDS PostgreSQL (database)  
 **Project Type**: Web application (frontend + backend)  
 **Performance Goals**: 2-second response time, 99% uptime during business hours  
 **Constraints**: 100 total users, 20 users per subscription, last-write-wins concurrency, no state persistence  
@@ -36,12 +37,12 @@
 **Constitution Compliance Status**: ✅ PASSED
 
 **Gates Verified**:
-- ✅ **Simplicity First**: Using built-in Angular, NestJS, and SQLite capabilities
+- ✅ **Simplicity First**: Using built-in Angular, NestJS, and PostgreSQL capabilities
 - ✅ **Security by Default**: HTTPS via CloudFront, bcrypt password hashing, RBAC with admin/user roles, rate limiting, audit logs, CSRF protection
 - ✅ **Testability & CI Discipline**: 80% test coverage, integration tests for auth/subscriptions/payments, E2E tests for critical flows, CI pipeline with linting
 - ✅ **Infrastructure as Code**: Terraform for AWS provisioning (ECS/Fargate, CloudFront, S3)
 - ✅ **Least Privilege & Data Protection**: Minimal permissions, secrets management, PII protection
-- ✅ **Observability**: Structured JSON logs, CloudWatch integration, Sentry error tracking, /healthz endpoint, automated SQLite backups
+- ✅ **Observability**: Structured JSON logs, CloudWatch integration, Sentry error tracking, /healthz endpoint, automated PostgreSQL backups via AWS RDS
 - ✅ **Documentation & Traceability**: PR requirements, API docs, spec updates
 - ✅ **Change Management**: PR approval process, spec deltas for governance changes
 
@@ -126,7 +127,7 @@ infrastructure/
 
 **Research Phase**: ✅ COMPLETED
 - All technical decisions resolved in `research.md`
-- Technology stack confirmed: NestJS + Angular + NgRx + SQLite + Prisma
+- Technology stack confirmed: NestJS + Angular + NgRx + PostgreSQL + Prisma
 - Architecture patterns established: modular backend, component-based frontend
 - Security, performance, and testing strategies defined
 

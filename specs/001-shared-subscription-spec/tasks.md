@@ -1,288 +1,284 @@
 # Tasks: Shared Subscription Debt Manager
 
-**Feature**: 001-shared-subscription-spec  
-**Generated**: 2025-10-18  
-**Purpose**: Implementation tasks for shared subscription debt management system
-
-## Overview
-
-This document contains all implementation tasks organized by user story priority and execution phases. Each task follows the strict checklist format and includes specific file paths for implementation.
-
-**Total Tasks**: 110  
+**Total Tasks**: 95  
 **User Stories**: 4 (P1: 2, P2: 1, P3: 1)  
-**Parallel Opportunities**: 28 tasks can be executed in parallel  
+**Parallel Opportunities**: 32 tasks can be executed in parallel  
 **MVP Scope**: User Stories 1-2 (P1) provide complete subscription and payment verification functionality
 
-## Phase 1: Setup (Project Initialization)
+## Phase 1: Setup (Project Initialization) ✅ COMPLETED
 
 ### T001-T010: Project Setup Tasks
 
 - [X] T001 Create project structure per implementation plan
 - [X] T002 Initialize backend NestJS project in backend/
 - [X] T003 Initialize frontend Angular project in frontend/
-- [ ] T004 Configure TypeScript and ESLint for both projects
+- [X] T004 Configure TypeScript and ESLint for both projects
 - [X] T005 Set up Prisma ORM with SQLite database in backend/
 - [X] T006 Configure environment files for development
 - [X] T007 Set up package.json scripts for development workflow
 - [X] T008 Initialize Git repository with proper .gitignore
-- [ ] T009 Configure Cursor IDE workspace settings
+- [X] T009 Configure Cursor IDE workspace settings
 - [X] T010 Create basic README with setup instructions
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Phase 2: Foundational (Blocking Prerequisites) 🔄 PARTIALLY COMPLETED
 
 ### T011-T025: Core Infrastructure Tasks
-### T090-T095: NgRx Implementation Tasks
 
-- [ ] T011 [P] Create Prisma schema with all entities in backend/prisma/schema.prisma
-- [ ] T012 [P] Set up database connection and configuration in backend/src/database/
-- [ ] T013 [P] Configure JWT authentication middleware in backend/src/auth/
-- [ ] T014 [P] Set up CORS and security middleware in backend/src/common/
-- [ ] T015 [P] Create health check endpoint in backend/src/health/
-- [ ] T016 [P] Set up error handling and logging in backend/src/common/
-- [ ] T017 [P] Configure Angular routing and guards in frontend/src/app/
-- [ ] T018 [P] Set up NgRx store structure in frontend/src/app/store/
-- [ ] T019 [P] Create base API service in frontend/src/app/services/
-- [ ] T020 [P] Set up HTTP interceptors for authentication in frontend/src/app/interceptors/
+- [X] T011 [P] Create Prisma schema with all entities in backend/prisma/schema.prisma
+- [X] T012 [P] Set up database connection and configuration in backend/src/database/
+- [X] T013 [P] Configure JWT authentication middleware in backend/src/auth/
+- [X] T014 [P] Set up CORS and security middleware in backend/src/common/
+- [X] T015 [P] Create health check endpoint in backend/src/health/
+- [X] T016 [P] Set up error handling and logging in backend/src/common/
+- [X] T017 [P] Configure Angular routing and guards in frontend/src/app/
+- [X] T018 [P] Set up NgRx store structure in frontend/src/app/store/
+- [X] T019 [P] Create base API service in frontend/src/app/services/
+- [X] T020 [P] Set up HTTP interceptors for authentication in frontend/src/app/interceptors/
 - [ ] T021 [P] Create base component structure in frontend/src/app/components/
-- [ ] T022 [P] Set up environment configuration in frontend/src/environments/
+- [X] T022 [P] Set up environment configuration in frontend/src/environments/
 - [ ] T023 [P] Configure testing setup for both projects
 - [ ] T024 [P] Set up CI/CD pipeline with GitHub Actions
 - [ ] T025 [P] Create Docker configuration for containerized development
-- [ ] T090 [P] Implement NgRx feature-based store modules in frontend/src/app/store/
+
+### T090-T095: NgRx Implementation Tasks
+
+- [X] T090 [P] Implement NgRx feature-based store modules in frontend/src/app/store/
 - [ ] T091 [P] Set up NgRx effects for HTTP service calls in frontend/src/app/store/effects/
-- [ ] T092 [P] Implement NgRx selectors for viewmodel logic in frontend/src/app/store/selectors/
+- [X] T092 [P] Implement NgRx selectors for viewmodel logic in frontend/src/app/store/selectors/
 - [ ] T093 [P] Create smart/dumb component architecture patterns in frontend/src/app/components/
-- [ ] T094 [P] Implement global error and loading state management in frontend/src/app/store/ui/
-- [ ] T095 [P] Configure NgRx state persistence strategy (no persistence) in frontend/src/app/store/
+- [X] T094 [P] Implement global error and loading state management in frontend/src/app/store/ui/
+- [X] T095 [P] Configure NgRx state persistence strategy (no persistence) in frontend/src/app/store/
 
 ## Phase 3: User Story 1 - Configure Shared Subscription (P1)
 
 **Goal**: Administrators can create subscriptions and generate monthly charges  
 **Independent Test**: Configure subscription with 4 participants; generate charges; verify sum equals total  
-**Tasks**: 18 tasks
 
-### T026-T043: Subscription Management Implementation
+### T026-T043: Backend Implementation
 
-- [ ] T026 [P] [US1] Create User entity model in backend/src/users/user.entity.ts
-- [ ] T027 [P] [US1] Create Subscription entity model in backend/src/subscriptions/subscription.entity.ts
-- [ ] T028 [P] [US1] Create SubscriptionParticipant entity model in backend/src/subscriptions/subscription-participant.entity.ts
-- [ ] T029 [P] [US1] Create Charge entity model in backend/src/charges/charge.entity.ts
-- [ ] T030 [P] [US1] Create ChargeShare entity model in backend/src/charges/charge-share.entity.ts
-- [ ] T031 [P] [US1] Implement UserService in backend/src/users/user.service.ts
-- [ ] T032 [P] [US1] Implement SubscriptionService in backend/src/subscriptions/subscription.service.ts
-- [ ] T033 [P] [US1] Implement ChargeService in backend/src/charges/charge.service.ts
-- [ ] T034 [P] [US1] Create UserController with CRUD operations in backend/src/users/user.controller.ts
-- [ ] T035 [P] [US1] Create SubscriptionController with CRUD operations in backend/src/subscriptions/subscription.controller.ts
-- [ ] T036 [P] [US1] Create ChargeController with generation endpoint in backend/src/charges/charge.controller.ts
-- [ ] T037 [P] [US1] Implement subscription creation API endpoint in backend/src/subscriptions/subscription.controller.ts
-- [ ] T038 [P] [US1] Implement charge generation API endpoint in backend/src/charges/charge.controller.ts
-- [ ] T039 [P] [US1] Create subscription form component in frontend/src/app/components/subscription-form/
-- [ ] T040 [P] [US1] Create subscription list component in frontend/src/app/components/subscription-list/
-- [ ] T041 [P] [US1] Implement NgRx store for subscriptions in frontend/src/app/store/subscriptions/
-- [ ] T042 [P] [US1] Create admin subscription page in frontend/src/app/pages/admin/subscriptions/
-- [ ] T043 [P] [US1] Implement charge generation UI in frontend/src/app/components/charge-generator/
+- [ ] T026 [P] [US1] Create User entity and service in backend/src/users/
+- [ ] T027 [P] [US1] Create Subscription entity and service in backend/src/subscriptions/
+- [ ] T028 [P] [US1] Create SubscriptionParticipant entity and service in backend/src/subscriptions/
+- [ ] T029 [P] [US1] Create Charge entity and service in backend/src/charges/
+- [ ] T030 [P] [US1] Create ChargeShare entity and service in backend/src/charges/
+- [ ] T031 [P] [US1] Implement User CRUD endpoints in backend/src/users/users.controller.ts
+- [ ] T032 [P] [US1] Implement Subscription CRUD endpoints in backend/src/subscriptions/subscriptions.controller.ts
+- [ ] T033 [P] [US1] Implement Charge generation logic in backend/src/charges/charges.service.ts
+- [ ] T034 [P] [US1] Implement Share calculation logic in backend/src/charges/charge-shares.service.ts
+- [ ] T035 [P] [US1] Create User DTOs and validation in backend/src/users/dto/
+- [ ] T036 [P] [US1] Create Subscription DTOs and validation in backend/src/subscriptions/dto/
+- [ ] T037 [P] [US1] Create Charge DTOs and validation in backend/src/charges/dto/
+- [ ] T038 [P] [US1] Implement User repository in backend/src/users/users.repository.ts
+- [ ] T039 [P] [US1] Implement Subscription repository in backend/src/subscriptions/subscriptions.repository.ts
+- [ ] T040 [P] [US1] Implement Charge repository in backend/src/charges/charges.repository.ts
+- [ ] T041 [P] [US1] Create User module in backend/src/users/users.module.ts
+- [ ] T042 [P] [US1] Create Subscription module in backend/src/subscriptions/subscriptions.module.ts
+- [ ] T043 [P] [US1] Create Charge module in backend/src/charges/charges.module.ts
 
-## Phase 4: User Story 2 - Verify User Payments (P1)
+### T044-T051: Frontend Implementation
+
+- [ ] T044 [P] [US1] Create User NgRx store in frontend/src/app/store/users/
+- [ ] T045 [P] [US1] Create Subscription NgRx store in frontend/src/app/store/subscriptions/
+- [ ] T046 [P] [US1] Create Charge NgRx store in frontend/src/app/store/charges/
+- [ ] T047 [P] [US1] Create User API service in frontend/src/app/services/user.service.ts
+- [ ] T048 [P] [US1] Create Subscription API service in frontend/src/app/services/subscription.service.ts
+- [ ] T049 [P] [US1] Create Charge API service in frontend/src/app/services/charge.service.ts
+- [ ] T050 [P] [US1] Create Admin dashboard page in frontend/src/app/pages/admin/dashboard/
+- [ ] T051 [P] [US1] Create Subscription management page in frontend/src/app/pages/admin/subscriptions/
+
+## Phase 4: User Story 2 - Verify Payment (P1)
 
 **Goal**: Administrators can verify user payments to settle shares  
 **Independent Test**: Create pending payment; mark verified; confirm balance decreases  
-**Tasks**: 15 tasks
 
-### T044-T058: Payment Verification Implementation
+### T052-T065: Backend Implementation
 
-- [ ] T044 [P] [US2] Create Payment entity model in backend/src/payments/payment.entity.ts
-- [ ] T045 [P] [US2] Implement PaymentService in backend/src/payments/payment.service.ts
-- [ ] T046 [P] [US2] Create PaymentController with CRUD operations in backend/src/payments/payment.controller.ts
-- [ ] T047 [P] [US2] Implement payment creation API endpoint in backend/src/payments/payment.controller.ts
-- [ ] T048 [P] [US2] Implement payment verification API endpoint in backend/src/payments/payment.controller.ts
-- [ ] T049 [P] [US2] Implement payment update/delete API endpoints in backend/src/payments/payment.controller.ts
-- [ ] T050 [P] [US2] Create payment form component in frontend/src/app/components/payment-form/
-- [ ] T051 [P] [US2] Create payment list component in frontend/src/app/components/payment-list/
-- [ ] T052 [P] [US2] Create payment verification component in frontend/src/app/components/payment-verification/
-- [ ] T053 [P] [US2] Implement NgRx store for payments in frontend/src/app/store/payments/
-- [ ] T054 [P] [US2] Create admin payments page in frontend/src/app/pages/admin/payments/
-- [ ] T055 [P] [US2] Implement payment verification UI in frontend/src/app/components/payment-verification/
-- [ ] T056 [P] [US2] Create pending payments table component in frontend/src/app/components/pending-payments-table/
-- [ ] T057 [P] [US2] Implement payment status management in frontend/src/app/store/payments/
-- [ ] T058 [P] [US2] Create payment history component in frontend/src/app/components/payment-history/
+- [ ] T052 [P] [US2] Create Payment entity and service in backend/src/payments/
+- [ ] T053 [P] [US2] Implement Payment CRUD endpoints in backend/src/payments/payments.controller.ts
+- [ ] T054 [P] [US2] Implement Payment verification logic in backend/src/payments/payments.service.ts
+- [ ] T055 [P] [US2] Implement Share settlement logic in backend/src/payments/payment-verification.service.ts
+- [ ] T056 [P] [US2] Create Payment DTOs and validation in backend/src/payments/dto/
+- [ ] T057 [P] [US2] Implement Payment repository in backend/src/payments/payments.repository.ts
+- [ ] T058 [P] [US2] Create Payment module in backend/src/payments/payments.module.ts
+- [ ] T059 [P] [US2] Implement Payment status validation in backend/src/payments/payment-status.guard.ts
+- [ ] T060 [P] [US2] Create Payment audit logging in backend/src/payments/payment-audit.service.ts
+- [ ] T061 [P] [US2] Implement Payment verification workflow in backend/src/payments/payment-workflow.service.ts
+- [ ] T062 [P] [US2] Create Payment notification service in backend/src/payments/payment-notification.service.ts
+- [ ] T063 [P] [US2] Implement Payment history tracking in backend/src/payments/payment-history.service.ts
+
+### T064-T071: Frontend Implementation
+
+- [ ] T064 [P] [US2] Create Payment NgRx store in frontend/src/app/store/payments/
+- [ ] T065 [P] [US2] Create Payment API service in frontend/src/app/services/payment.service.ts
+- [ ] T066 [P] [US2] Create Payment verification page in frontend/src/app/pages/admin/payments/
+- [ ] T067 [P] [US2] Create Payment verification component in frontend/src/app/components/payment-verification/
+- [ ] T068 [P] [US2] Create Payment status indicators in frontend/src/app/components/payment-status/
+- [ ] T069 [P] [US2] Create Payment audit log component in frontend/src/app/components/payment-audit/
+- [ ] T070 [P] [US2] Create Payment workflow component in frontend/src/app/components/payment-workflow/
+- [ ] T071 [P] [US2] Create Payment notification component in frontend/src/app/components/payment-notification/
 
 ## Phase 5: User Story 3 - User Payment Management (P2)
 
 **Goal**: Users can manage their own pending payments  
-**Independent Test**: User creates, updates, deletes pending payment; verified records unaffected  
-**Tasks**: 12 tasks
+**Independent Test**: User creates, edits, deletes pending payment; verified payments unchanged  
 
-### T059-T070: User Payment Management Implementation
+### T072-T080: Backend Implementation
 
-- [ ] T059 [P] [US3] Implement user payment creation API endpoint in backend/src/payments/payment.controller.ts
-- [ ] T060 [P] [US3] Implement user payment update API endpoint in backend/src/payments/payment.controller.ts
-- [ ] T061 [P] [US3] Implement user payment deletion API endpoint in backend/src/payments/payment.controller.ts
-- [ ] T062 [P] [US3] Create user payment form component in frontend/src/app/components/user-payment-form/
-- [ ] T063 [P] [US3] Create user payment list component in frontend/src/app/components/user-payment-list/
-- [ ] T064 [P] [US3] Implement user payment management UI in frontend/src/app/pages/user/payments/
-- [ ] T065 [P] [US3] Create user payment edit component in frontend/src/app/components/user-payment-edit/
-- [ ] T066 [P] [US3] Implement user payment deletion UI in frontend/src/app/components/user-payment-delete/
-- [ ] T067 [P] [US3] Create user payment validation in frontend/src/app/components/user-payment-form/
-- [ ] T068 [P] [US3] Implement user payment permissions in backend/src/payments/payment.service.ts
-- [ ] T069 [P] [US3] Create user payment error handling in frontend/src/app/components/user-payment-form/
-- [ ] T070 [P] [US3] Implement user payment state management in frontend/src/app/store/payments/
+- [ ] T072 [P] [US3] Implement User payment endpoints in backend/src/payments/user-payments.controller.ts
+- [ ] T073 [P] [US3] Implement Payment ownership validation in backend/src/payments/payment-ownership.guard.ts
+- [ ] T074 [P] [US3] Implement Payment modification restrictions in backend/src/payments/payment-modification.service.ts
+- [ ] T075 [P] [US3] Create User payment DTOs in backend/src/payments/dto/user-payment.dto.ts
+- [ ] T076 [P] [US3] Implement User payment repository in backend/src/payments/user-payments.repository.ts
+- [ ] T077 [P] [US3] Create User payment module in backend/src/payments/user-payments.module.ts
+- [ ] T078 [P] [US3] Implement Payment validation service in backend/src/payments/payment-validation.service.ts
+- [ ] T079 [P] [US3] Create Payment conflict resolution in backend/src/payments/payment-conflict.service.ts
+- [ ] T080 [P] [US3] Implement Payment scheduling logic in backend/src/payments/payment-scheduling.service.ts
 
-## Phase 6: User Story 4 - View Balances and Reports (P3)
+### T081-T085: Frontend Implementation
 
-**Goal**: Users and admins can view balances and reports as of a date  
+- [ ] T081 [P] [US3] Create User payment page in frontend/src/app/pages/user/payments/
+- [ ] T082 [P] [US3] Create User payment form in frontend/src/app/components/user-payment-form/
+- [ ] T083 [P] [US3] Create User payment list in frontend/src/app/components/user-payment-list/
+- [ ] T084 [P] [US3] Create User payment history in frontend/src/app/components/user-payment-history/
+- [ ] T085 [P] [US3] Create User payment dashboard in frontend/src/app/pages/user/dashboard/
+
+## Phase 6: User Story 4 - Reports and Balances (P3)
+
+**Goal**: Users and administrators can view balances and reports  
 **Independent Test**: Select date; confirm totals reflect charges and verified payments  
-**Tasks**: 12 tasks
 
-### T071-T080: Reporting Implementation
+### T086-T095: Backend Implementation
 
-- [ ] T071 [P] [US4] Create SummaryReport entity model in backend/src/reports/summary-report.entity.ts
-- [ ] T072 [P] [US4] Create UserBalance entity model in backend/src/reports/user-balance.entity.ts
-- [ ] T096 [P] [US4] Define SummaryReport entity in data model with fields and relationships
-- [ ] T097 [P] [US4] Define UserBalance entity in data model with fields and relationships
-- [ ] T073 [P] [US4] Implement ReportService in backend/src/reports/report.service.ts
-- [ ] T074 [P] [US4] Create ReportController with summary endpoint in backend/src/reports/report.controller.ts
-- [ ] T075 [P] [US4] Implement user balance API endpoint in backend/src/reports/report.controller.ts
-- [ ] T076 [P] [US4] Create balance card component in frontend/src/app/components/balance-card/
-- [ ] T077 [P] [US4] Create summary report component in frontend/src/app/components/summary-report/
-- [ ] T078 [P] [US4] Implement NgRx store for reports in frontend/src/app/store/reports/
-- [ ] T079 [P] [US4] Create admin reports page in frontend/src/app/pages/admin/reports/
-- [ ] T080 [P] [US4] Create user balance page in frontend/src/app/pages/user/balance/
+- [ ] T086 [P] [US4] Create Report entity and service in backend/src/reports/
+- [ ] T087 [P] [US4] Implement Balance calculation service in backend/src/reports/balance.service.ts
+- [ ] T088 [P] [US4] Implement Report generation service in backend/src/reports/report.service.ts
+- [ ] T089 [P] [US4] Create Report endpoints in backend/src/reports/reports.controller.ts
+- [ ] T090 [P] [US4] Implement Report repository in backend/src/reports/reports.repository.ts
+- [ ] T091 [P] [US4] Create Report module in backend/src/reports/reports.module.ts
+- [ ] T092 [P] [US4] Implement Report caching in backend/src/reports/report-cache.service.ts
+- [ ] T093 [P] [US4] Create Report export service in backend/src/reports/report-export.service.ts
+- [ ] T094 [P] [US4] Implement Report scheduling in backend/src/reports/report-scheduler.service.ts
+- [ ] T095 [P] [US4] Create Report analytics service in backend/src/reports/report-analytics.service.ts
 
-## Phase 7: Polish & Cross-Cutting Concerns
+### T096-T100: Frontend Implementation
 
-### T081-T089: Final Implementation Tasks
-### T098-T105: Infrastructure & Performance Tasks
-
-- [ ] T081 [P] Implement comprehensive error handling across all components
-- [ ] T082 [P] Add loading states and user feedback throughout the application
-- [ ] T083 [P] Implement comprehensive input validation on both frontend and backend
-- [ ] T084 [P] Add comprehensive logging and monitoring
-- [ ] T085 [P] Implement security headers and CORS configuration
-- [ ] T086 [P] Add comprehensive unit tests for all services and components
-- [ ] T087 [P] Add integration tests for all API endpoints
-- [ ] T088 [P] Add end-to-end tests for critical user flows
-- [ ] T089 [P] Implement performance optimization and caching
-- [ ] T098 [P] Set up AWS Fargate deployment configuration in infrastructure/terraform/
-- [ ] T099 [P] Configure S3+CloudFront for frontend hosting in infrastructure/terraform/
-- [ ] T100 [P] Implement automated deployment pipeline for staging and production
-- [ ] T101 [P] Set up SQLite database backup and recovery procedures
-- [ ] T102 [P] Configure load testing for 2-second response time under 10 concurrent users
-- [ ] T103 [P] Implement performance monitoring and alerting for 99% uptime
-- [ ] T104 [P] Set up infrastructure monitoring and health checks
-- [ ] T105 [P] Configure automated backup retention and recovery testing
+- [ ] T096 [P] [US4] Create Report NgRx store in frontend/src/app/store/reports/
+- [ ] T097 [P] [US4] Create Report API service in frontend/src/app/services/report.service.ts
+- [ ] T098 [P] [US4] Create Report dashboard in frontend/src/app/pages/admin/reports/
+- [ ] T099 [P] [US4] Create User balance page in frontend/src/app/pages/user/balance/
+- [ ] T100 [P] [US4] Create Report export component in frontend/src/app/components/report-export/
 
 ## Dependencies
 
-### User Story Completion Order
-1. **User Story 1** (P1) - Must complete first (subscription and charge foundation)
-2. **User Story 2** (P1) - Can start after US1 (depends on subscription/charge data)
-3. **User Story 3** (P2) - Can start after US2 (depends on payment system)
-4. **User Story 4** (P3) - Can start after US3 (depends on payment data)
+### User Story Dependencies
+- **US1** (Subscription Management) → **US2** (Payment Verification)
+- **US2** (Payment Verification) → **US3** (User Payment Management)
+- **US3** (User Payment Management) → **US4** (Reports and Balances)
 
-### Critical Dependencies
-- **T011-T025**: Must complete before any user story implementation
-- **T026-T043**: Must complete before T044-T058 (US2 depends on US1)
-- **T044-T058**: Must complete before T059-T070 (US3 depends on US2)
-- **T059-T070**: Must complete before T071-T080 (US4 depends on US3)
+### Technical Dependencies
+- **Phase 1** → **Phase 2** (Setup before infrastructure)
+- **Phase 2** → **Phase 3+** (Infrastructure before user stories)
+- **Backend entities** → **Backend services** → **Backend controllers**
+- **Backend controllers** → **Frontend API services** → **Frontend components**
 
 ## Parallel Execution Examples
 
-### Phase 3 (US1) - Parallel Opportunities
-- **T026-T030**: Entity models can be created in parallel
-- **T031-T033**: Services can be implemented in parallel
-- **T034-T036**: Controllers can be implemented in parallel
-- **T039-T041**: Frontend components can be developed in parallel
+### Phase 2 (Infrastructure) - 20 parallel tasks
+```bash
+# Backend infrastructure (10 tasks)
+T011, T012, T013, T014, T015, T016, T023, T024, T025, T090
 
-### Phase 4 (US2) - Parallel Opportunities
-- **T044-T046**: Payment entities and services in parallel
-- **T047-T049**: API endpoints in parallel
-- **T050-T053**: Frontend components in parallel
+# Frontend infrastructure (10 tasks)  
+T017, T018, T019, T020, T021, T022, T091, T092, T093, T094
+```
 
-### Phase 5 (US3) - Parallel Opportunities
-- **T059-T061**: API endpoints in parallel
-- **T062-T065**: Frontend components in parallel
+### Phase 3 (US1) - 18 parallel tasks
+```bash
+# Backend entities (6 tasks)
+T026, T027, T028, T029, T030, T035
 
-### Phase 6 (US4) - Parallel Opportunities
-- **T071-T075**: Backend reporting in parallel
-- **T076-T079**: Frontend reporting in parallel
-- **T096-T097**: Entity definitions in parallel
+# Backend services (6 tasks)
+T031, T032, T033, T034, T036, T037
 
-### Phase 7 (Polish) - Parallel Opportunities
-- **T081-T085**: Cross-cutting concerns in parallel
-- **T086-T088**: Testing implementation in parallel
-- **T098-T105**: Infrastructure and performance in parallel
+# Frontend store (6 tasks)
+T044, T045, T046, T047, T048, T049
+```
+
+### Phase 4 (US2) - 13 parallel tasks
+```bash
+# Backend payment logic (7 tasks)
+T052, T053, T054, T055, T056, T057, T058
+
+# Frontend payment UI (6 tasks)
+T064, T065, T066, T067, T068, T069
+```
 
 ## Implementation Strategy
 
 ### MVP First Approach
-1. **Phase 1-2**: Complete setup and foundational tasks
-2. **Phase 3-4**: Implement P1 user stories (US1 + US2) for core functionality
-3. **Phase 5-6**: Add P2-P3 user stories for enhanced functionality
-4. **Phase 7**: Polish and optimization
+1. **Phase 1-2**: Complete setup and infrastructure
+2. **Phase 3**: Implement US1 (Subscription Management) - Core functionality
+3. **Phase 4**: Implement US2 (Payment Verification) - Essential for debt settlement
+4. **Phase 5-6**: Implement US3-4 (User Management, Reports) - Enhanced features
 
 ### Incremental Delivery
-- **Week 1**: Setup and foundational tasks (T001-T025, T090-T095)
-- **Week 2**: User Story 1 implementation (T026-T043)
-- **Week 3**: User Story 2 implementation (T044-T058)
-- **Week 4**: User Stories 3-4 implementation (T059-T080, T096-T097)
-- **Week 5**: Polish, testing, and infrastructure (T081-T089, T098-T105)
+- **Sprint 1**: Setup + Infrastructure (T001-T025, T090-T095)
+- **Sprint 2**: US1 Backend (T026-T043)
+- **Sprint 3**: US1 Frontend (T044-T051)
+- **Sprint 4**: US2 Backend (T052-T063)
+- **Sprint 5**: US2 Frontend (T064-T071)
+- **Sprint 6**: US3-4 Implementation (T072-T100)
 
 ### Testing Strategy
 - **Unit Tests**: Each service and component
-- **Integration Tests**: All API endpoints
-- **E2E Tests**: Critical user flows (login, subscription creation, payment verification)
-- **Coverage Target**: 80% minimum
+- **Integration Tests**: API endpoints and database operations
+- **E2E Tests**: Complete user workflows
+- **Coverage Target**: 80% across all modules
+
+## PostgreSQL Migration Tasks (Priority: HIGH)
+
+### T101-T110: Database Migration Tasks
+
+- [ ] T101 [P] Update Prisma schema from SQLite to PostgreSQL in backend/prisma/schema.prisma
+- [ ] T102 [P] Create Docker Compose configuration for PostgreSQL in docker-compose.yml
+- [ ] T103 [P] Create development environment file in backend/.env.dev
+- [ ] T104 [P] Create production environment file in backend/.env.prod
+- [ ] T105 [P] Update database connection service for PostgreSQL in backend/src/database/
+- [ ] T106 [P] Create PostgreSQL migration scripts in backend/prisma/migrations/
+- [ ] T107 [P] Update health check endpoint for PostgreSQL in backend/src/health/
+- [ ] T108 [P] Create database seeding scripts in backend/prisma/seed.ts
+- [ ] T109 [P] Update CI/CD pipeline for PostgreSQL in .github/workflows/
+- [ ] T110 [P] Create Terraform configuration for AWS RDS in infrastructure/terraform/
+
+### T111-T115: Infrastructure Tasks
+
+- [ ] T111 [P] Create AWS RDS PostgreSQL configuration in infrastructure/terraform/rds.tf
+- [ ] T112 [P] Create database backup configuration in infrastructure/terraform/backup.tf
+- [ ] T113 [P] Create database monitoring configuration in infrastructure/terraform/monitoring.tf
+- [ ] T114 [P] Create database security configuration in infrastructure/terraform/security.tf
+- [ ] T115 [P] Create database documentation in docs/database-setup.md
+
+**Note**: These migration tasks should be completed before proceeding with Phase 3 (User Story 1) to ensure PostgreSQL is properly configured.
 
 ## Success Criteria
 
+### Phase Completion Criteria
+- **Phase 1**: Project builds and runs locally
+- **Phase 2**: All infrastructure components functional
+- **Phase 3**: Subscription creation and charge generation working
+- **Phase 4**: Payment verification workflow complete
+- **Phase 5**: User payment management functional
+- **Phase 6**: Reports and balances accurate
+
 ### Independent Test Criteria
-- **US1**: Configure subscription with 4 participants; generate charges; verify sum equals total
-- **US2**: Create pending payment; mark verified; confirm balance decreases
-- **US3**: User creates, updates, deletes pending payment; verified records unaffected
-- **US4**: Select date; confirm totals reflect charges and verified payments
+- **US1**: Configure subscription → Generate charges → Verify totals
+- **US2**: Create payment → Verify payment → Confirm balance change
+- **US3**: User creates payment → Edits payment → Deletes payment
+- **US4**: Select date → View report → Confirm accuracy
 
-### Technical Validation
-- All API endpoints return expected responses
-- Database constraints enforce data integrity
-- Frontend components handle all user interactions
-- NgRx store maintains consistent state
-- Authentication and authorization work correctly
-- Error handling provides clear user feedback
-
-## Next Steps
-
-1. **Start with Phase 1**: Complete all setup tasks (T001-T010)
-2. **Move to Phase 2**: Implement foundational infrastructure (T011-T025)
-3. **Begin User Story 1**: Implement subscription management (T026-T043)
-4. **Continue with User Story 2**: Implement payment verification (T044-T058)
-5. **Add remaining user stories**: Complete US3 and US4 (T059-T080)
-6. **Final polish**: Complete testing and optimization (T081-T089)
-
-Each task is designed to be independently executable with clear acceptance criteria and file paths for implementation.
-
-## Additional Tasks Added
-
-### NgRx Implementation Tasks (T090-T095)
-These tasks address the missing NgRx requirements (NFR-007 to NFR-011):
-- **T090**: Feature-based store modules for organized state management
-- **T091**: Effects for HTTP service calls with proper action handling
-- **T092**: Selectors for viewmodel logic and data transformation
-- **T093**: Smart/dumb component architecture patterns
-- **T094**: Global error and loading state management
-- **T095**: No persistence configuration for security
-
-### Entity Definition Tasks (T096-T097)
-These tasks address missing entity definitions:
-- **T096**: SummaryReport entity definition in data model
-- **T097**: UserBalance entity definition in data model
-
-### Infrastructure & Performance Tasks (T098-T105)
-These tasks address missing infrastructure requirements (INF-001, INF-003, INF-007, INF-008):
-- **T098**: AWS Fargate deployment configuration
-- **T099**: S3+CloudFront frontend hosting
-- **T100**: Automated deployment pipeline
-- **T101**: SQLite database backup procedures
-- **T102**: Load testing for 2-second response time
-- **T103**: Performance monitoring for 99% uptime
-- **T104**: Infrastructure monitoring and health checks
-- **T105**: Automated backup retention and recovery testing
+### Quality Gates
+- All tests passing (unit, integration, E2E)
+- Code coverage ≥ 80%
+- Security scan passing
+- Performance benchmarks met
+- Documentation complete

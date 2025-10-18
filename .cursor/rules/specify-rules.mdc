@@ -22,8 +22,29 @@ Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions
 
 ## Recent Changes
 - 001-shared-subscription-spec: Added Node.js 18+ (backend), TypeScript 5+ (frontend) + NestJS (backend), Angular 17+ (frontend), NgRx (state management), Prisma (ORM), SQLite (database)
-- 001-shared-subscription-spec: Added Node.js 18+ (backend), TypeScript 5+ (frontend) + NestJS (backend), Angular 17+ (frontend), NgRx (state management), Prisma (ORM), SQLite (database)
 - 001-shared-subscription-spec: Added Node.js 18+ (backend), TypeScript 5+ (frontend) + NestJS (backend), Angular 17+ (frontend), Prisma (ORM), SQLite (database)
 
+## Code Style
+Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions
+
+## Naming Conventions
+
+### Backend Layer Naming
+- **Controllers**: `{Entity}Controller` (e.g., `UserController`)
+- **Services**: `{Entity}Service` (e.g., `UserService`) 
+- **Repositories**: `{Entity}Repository` (e.g., `UserRepository`)
+
+### API Objects
+- **Request DTOs**: `{Action}{Entity}RequestApi` (e.g., `CreateUserRequestApi`)
+- **Response DTOs**: `{Action}{Entity}ResponseApi` (e.g., `CreateUserResponseApi`, `GetUsersResponseApi`)
+
+### Service Layer Objects
+- **Domain Models**: `{Entity}` (e.g., `User`)
+- **Request Objects**: `{Action}{Entity}Request` (e.g., `CreateUserRequest`)
+
+### Repository Layer Objects
+- **Repository Classes**: `{Entity}Repository` (e.g., `UserRepository`)
+- **Data Transfer Objects**: `{Entity}Dto` (e.g., `UserDto`)
+- 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

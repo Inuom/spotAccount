@@ -36,7 +36,7 @@ model User {
 model Subscription {
   id           String   @id @default(uuid())
   title        String
-  total_amount Decimal  @db.Real
+  total_amount Decimal
   billing_day  Int      // 1-31
   frequency    String   @default("monthly")
   owner_id     String
@@ -60,7 +60,7 @@ model SubscriptionParticipant {
   subscription_id String
   user_id         String
   share_type      ShareType @default(EQUAL)
-  share_value     Decimal?  @db.Real
+  share_value     Decimal?
   is_active       Boolean  @default(true)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
@@ -79,7 +79,7 @@ model Charge {
   subscription_id String
   period_start    DateTime
   period_end      DateTime
-  amount_total    Decimal  @db.Real
+  amount_total    Decimal
   status          ChargeStatus @default(PENDING)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
@@ -97,8 +97,8 @@ model ChargeShare {
   id          String   @id @default(uuid())
   charge_id   String
   user_id     String
-  amount_due  Decimal  @db.Real
-  amount_paid Decimal  @default(0) @db.Real
+  amount_due  Decimal
+  amount_paid Decimal  @default(0)
   status      ShareStatus @default(OPEN)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
@@ -115,7 +115,7 @@ model Payment {
   id                      String   @id @default(uuid())
   user_id                 String
   charge_id               String?
-  amount                  Decimal  @db.Real
+  amount                  Decimal
   currency                String   @default("EUR")
   scheduled_date          DateTime
   created_by              String

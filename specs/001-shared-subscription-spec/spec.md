@@ -141,13 +141,13 @@ verified payments up to that date.
 ### Infrastructure & Deployment Requirements
 
 - **INF-001**: The system MUST be deployed on AWS using Fargate for backend hosting and S3+CloudFront for frontend hosting.
-- **INF-002**: The system MUST use SQLite database with file storage for data persistence.
+- **INF-002**: The system MUST use PostgreSQL database for all environments (development and production) with Docker containerization for local development and AWS RDS for production.
 - **INF-003**: The system MUST use Terraform for infrastructure as code to provision and manage AWS resources.
 - **INF-004**: The system MUST implement GitHub Actions CI/CD pipeline with automated testing, linting, security scanning, and deployment.
 - **INF-005**: The system MUST achieve minimum 80% test coverage across unit, integration, and end-to-end tests in the CI/CD pipeline.
 - **INF-006**: The system MUST implement basic logging for application monitoring and debugging.
 - **INF-007**: The system MUST support automated deployment to staging and production environments.
-- **INF-008**: The system MUST include infrastructure backup and recovery procedures for the SQLite database.
+- **INF-008**: The system MUST include infrastructure backup and recovery procedures for the PostgreSQL database with automated RDS snapshots and point-in-time recovery.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -186,5 +186,13 @@ verified payments up to that date.
 - Q: What state persistence strategy should be implemented for NgRx store? → A: No persistence - all state recreated on page refresh for security
 - Q: What component architecture pattern should be used with NgRx? → A: Smart/dumb components with selectors for data binding, components only display and bind
 - Q: What error handling and loading state strategy should be used with NgRx? → A: Global error/loading state in store with selectors for UI state management
+
+### Session 2025-10-18
+
+- Q: What database strategy should be used for development and production? → A: PostgreSQL everywhere (dev + prod) with Docker containerization for local development
+- Q: How should PostgreSQL be configured for local development? → A: Docker Compose with PostgreSQL containerized for consistency with production
+- Q: What PostgreSQL deployment strategy should be used for production? → A: AWS RDS PostgreSQL (managed service) for high availability and automated backups
+- Q: How should existing SQLite data be handled during migration? → A: Start fresh without data migration to ensure clean PostgreSQL implementation
+- Q: How should database configuration be managed across environments? → A: Separate configuration files (.env.dev, .env.prod) for environment-specific database settings
 
 

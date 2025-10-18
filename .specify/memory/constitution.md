@@ -28,7 +28,7 @@ Last Amended Date: 2025-10-17
 
 ### 1. Simplicity First
 
-- Prefer built-in capabilities of Angular, NestJS, and SQLite over custom frameworks.
+- Prefer built-in capabilities of Angular, NestJS, and PostgreSQL over custom frameworks.
 - Minimize surface area: keep modules cohesive and avoid unnecessary abstractions.
 - Deliver in small, reviewable increments with clear scope and rationale.
 
@@ -76,7 +76,7 @@ Rationale: Reduces blast radius and compliance risk.
 - Capture frontend and backend errors with Sentry (or equivalent).
 - Expose `/healthz` for liveness; add readiness if applicable.
 - Configure alerts for error rates, latency, and job failures.
-- Schedule automated SQLite database backups with retention and recovery procedures.
+- Schedule automated PostgreSQL database backups with retention and recovery procedures using AWS RDS snapshots.
 
 Rationale: Issues must be detectable, diagnosable, and recoverable.
 
