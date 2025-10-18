@@ -8,29 +8,30 @@
 
 This document contains all implementation tasks organized by user story priority and execution phases. Each task follows the strict checklist format and includes specific file paths for implementation.
 
-**Total Tasks**: 89  
+**Total Tasks**: 110  
 **User Stories**: 4 (P1: 2, P2: 1, P3: 1)  
-**Parallel Opportunities**: 23 tasks can be executed in parallel  
+**Parallel Opportunities**: 28 tasks can be executed in parallel  
 **MVP Scope**: User Stories 1-2 (P1) provide complete subscription and payment verification functionality
 
 ## Phase 1: Setup (Project Initialization)
 
 ### T001-T010: Project Setup Tasks
 
-- [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize backend NestJS project in backend/
-- [ ] T003 Initialize frontend Angular project in frontend/
+- [X] T001 Create project structure per implementation plan
+- [X] T002 Initialize backend NestJS project in backend/
+- [X] T003 Initialize frontend Angular project in frontend/
 - [ ] T004 Configure TypeScript and ESLint for both projects
-- [ ] T005 Set up Prisma ORM with SQLite database in backend/
-- [ ] T006 Configure environment files for development
-- [ ] T007 Set up package.json scripts for development workflow
-- [ ] T008 Initialize Git repository with proper .gitignore
+- [X] T005 Set up Prisma ORM with SQLite database in backend/
+- [X] T006 Configure environment files for development
+- [X] T007 Set up package.json scripts for development workflow
+- [X] T008 Initialize Git repository with proper .gitignore
 - [ ] T009 Configure Cursor IDE workspace settings
-- [ ] T010 Create basic README with setup instructions
+- [X] T010 Create basic README with setup instructions
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
 ### T011-T025: Core Infrastructure Tasks
+### T090-T095: NgRx Implementation Tasks
 
 - [ ] T011 [P] Create Prisma schema with all entities in backend/prisma/schema.prisma
 - [ ] T012 [P] Set up database connection and configuration in backend/src/database/
@@ -47,6 +48,12 @@ This document contains all implementation tasks organized by user story priority
 - [ ] T023 [P] Configure testing setup for both projects
 - [ ] T024 [P] Set up CI/CD pipeline with GitHub Actions
 - [ ] T025 [P] Create Docker configuration for containerized development
+- [ ] T090 [P] Implement NgRx feature-based store modules in frontend/src/app/store/
+- [ ] T091 [P] Set up NgRx effects for HTTP service calls in frontend/src/app/store/effects/
+- [ ] T092 [P] Implement NgRx selectors for viewmodel logic in frontend/src/app/store/selectors/
+- [ ] T093 [P] Create smart/dumb component architecture patterns in frontend/src/app/components/
+- [ ] T094 [P] Implement global error and loading state management in frontend/src/app/store/ui/
+- [ ] T095 [P] Configure NgRx state persistence strategy (no persistence) in frontend/src/app/store/
 
 ## Phase 3: User Story 1 - Configure Shared Subscription (P1)
 
@@ -124,12 +131,14 @@ This document contains all implementation tasks organized by user story priority
 
 **Goal**: Users and admins can view balances and reports as of a date  
 **Independent Test**: Select date; confirm totals reflect charges and verified payments  
-**Tasks**: 10 tasks
+**Tasks**: 12 tasks
 
 ### T071-T080: Reporting Implementation
 
 - [ ] T071 [P] [US4] Create SummaryReport entity model in backend/src/reports/summary-report.entity.ts
 - [ ] T072 [P] [US4] Create UserBalance entity model in backend/src/reports/user-balance.entity.ts
+- [ ] T096 [P] [US4] Define SummaryReport entity in data model with fields and relationships
+- [ ] T097 [P] [US4] Define UserBalance entity in data model with fields and relationships
 - [ ] T073 [P] [US4] Implement ReportService in backend/src/reports/report.service.ts
 - [ ] T074 [P] [US4] Create ReportController with summary endpoint in backend/src/reports/report.controller.ts
 - [ ] T075 [P] [US4] Implement user balance API endpoint in backend/src/reports/report.controller.ts
@@ -142,6 +151,7 @@ This document contains all implementation tasks organized by user story priority
 ## Phase 7: Polish & Cross-Cutting Concerns
 
 ### T081-T089: Final Implementation Tasks
+### T098-T105: Infrastructure & Performance Tasks
 
 - [ ] T081 [P] Implement comprehensive error handling across all components
 - [ ] T082 [P] Add loading states and user feedback throughout the application
@@ -152,6 +162,14 @@ This document contains all implementation tasks organized by user story priority
 - [ ] T087 [P] Add integration tests for all API endpoints
 - [ ] T088 [P] Add end-to-end tests for critical user flows
 - [ ] T089 [P] Implement performance optimization and caching
+- [ ] T098 [P] Set up AWS Fargate deployment configuration in infrastructure/terraform/
+- [ ] T099 [P] Configure S3+CloudFront for frontend hosting in infrastructure/terraform/
+- [ ] T100 [P] Implement automated deployment pipeline for staging and production
+- [ ] T101 [P] Set up SQLite database backup and recovery procedures
+- [ ] T102 [P] Configure load testing for 2-second response time under 10 concurrent users
+- [ ] T103 [P] Implement performance monitoring and alerting for 99% uptime
+- [ ] T104 [P] Set up infrastructure monitoring and health checks
+- [ ] T105 [P] Configure automated backup retention and recovery testing
 
 ## Dependencies
 
@@ -187,6 +205,12 @@ This document contains all implementation tasks organized by user story priority
 ### Phase 6 (US4) - Parallel Opportunities
 - **T071-T075**: Backend reporting in parallel
 - **T076-T079**: Frontend reporting in parallel
+- **T096-T097**: Entity definitions in parallel
+
+### Phase 7 (Polish) - Parallel Opportunities
+- **T081-T085**: Cross-cutting concerns in parallel
+- **T086-T088**: Testing implementation in parallel
+- **T098-T105**: Infrastructure and performance in parallel
 
 ## Implementation Strategy
 
@@ -197,11 +221,11 @@ This document contains all implementation tasks organized by user story priority
 4. **Phase 7**: Polish and optimization
 
 ### Incremental Delivery
-- **Week 1**: Setup and foundational tasks (T001-T025)
+- **Week 1**: Setup and foundational tasks (T001-T025, T090-T095)
 - **Week 2**: User Story 1 implementation (T026-T043)
 - **Week 3**: User Story 2 implementation (T044-T058)
-- **Week 4**: User Stories 3-4 implementation (T059-T080)
-- **Week 5**: Polish and testing (T081-T089)
+- **Week 4**: User Stories 3-4 implementation (T059-T080, T096-T097)
+- **Week 5**: Polish, testing, and infrastructure (T081-T089, T098-T105)
 
 ### Testing Strategy
 - **Unit Tests**: Each service and component
@@ -235,3 +259,30 @@ This document contains all implementation tasks organized by user story priority
 6. **Final polish**: Complete testing and optimization (T081-T089)
 
 Each task is designed to be independently executable with clear acceptance criteria and file paths for implementation.
+
+## Additional Tasks Added
+
+### NgRx Implementation Tasks (T090-T095)
+These tasks address the missing NgRx requirements (NFR-007 to NFR-011):
+- **T090**: Feature-based store modules for organized state management
+- **T091**: Effects for HTTP service calls with proper action handling
+- **T092**: Selectors for viewmodel logic and data transformation
+- **T093**: Smart/dumb component architecture patterns
+- **T094**: Global error and loading state management
+- **T095**: No persistence configuration for security
+
+### Entity Definition Tasks (T096-T097)
+These tasks address missing entity definitions:
+- **T096**: SummaryReport entity definition in data model
+- **T097**: UserBalance entity definition in data model
+
+### Infrastructure & Performance Tasks (T098-T105)
+These tasks address missing infrastructure requirements (INF-001, INF-003, INF-007, INF-008):
+- **T098**: AWS Fargate deployment configuration
+- **T099**: S3+CloudFront frontend hosting
+- **T100**: Automated deployment pipeline
+- **T101**: SQLite database backup procedures
+- **T102**: Load testing for 2-second response time
+- **T103**: Performance monitoring for 99% uptime
+- **T104**: Infrastructure monitoring and health checks
+- **T105**: Automated backup retention and recovery testing

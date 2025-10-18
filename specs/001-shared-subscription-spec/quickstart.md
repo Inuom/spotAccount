@@ -1,6 +1,6 @@
 # Quickstart Guide: Shared Subscription Debt Manager
 
-**Date**: 2025-10-17  
+**Date**: 2025-10-18  
 **Feature**: 001-shared-subscription-spec  
 **Purpose**: Get the application running locally for development
 

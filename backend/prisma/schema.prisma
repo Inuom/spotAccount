@@ -1,0 +1,165 @@
+// This is your Prisma schema file for SQLite database
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User entity - system users (administrators and participants)
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  password_hash String
+  role          Role     @default(USER)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  owned_subscriptions      Subscription[]          @relation("SubscriptionOwner")
+  subscription_participants SubscriptionParticipant[]
+  charge_shares            ChargeShare[]
+  payments_made            Payment[]               @relation("PaymentUser")
+  payments_created         Payment[]               @relation("PaymentCreatedBy")
+  payments_verified        Payment[]               @relation("PaymentVerifiedBy")
+
+  @@map("users")
+}
+
+// Subscription entity - recurring shared expense configurations
+model Subscription {
+  id           String   @id @default(uuid())
+  title        String
+  total_amount Decimal  @db.Real
+  billing_day  Int      // 1-31
+  frequency    String   @default("monthly")
+  owner_id     String
+  start_date   DateTime
+  end_date     DateTime?
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  // Relations
+  owner        User                    @relation("SubscriptionOwner", fields: [owner_id], references: [id])
+  participants SubscriptionParticipant[]
+  charges      Charge[]
+
+  @@map("subscriptions")
+}
+
+// SubscriptionParticipant entity - links users to subscriptions
+model SubscriptionParticipant {
+  id              String   @id @default(uuid())
+  subscription_id String
+  user_id         String
+  share_type      ShareType @default(EQUAL)
+  share_value     Decimal?  @db.Real
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  subscription Subscription @relation(fields: [subscription_id], references: [id])
+  user         User         @relation(fields: [user_id], references: [id])
+
+  @@unique([subscription_id, user_id])
+  @@map("subscription_participants")
+}
+
+// Charge entity - monthly instances of subscription billing
+model Charge {
+  id              String   @id @default(uuid())
+  subscription_id String
+  period_start    DateTime
+  period_end      DateTime
+  amount_total    Decimal  @db.Real
+  status          ChargeStatus @default(PENDING)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  subscription Subscription  @relation(fields: [subscription_id], references: [id])
+  shares       ChargeShare[]
+  payments     Payment[]
+
+  @@map("charges")
+}
+
+// ChargeShare entity - individual participant's portion of a charge
+model ChargeShare {
+  id          String   @id @default(uuid())
+  charge_id   String
+  user_id     String
+  amount_due  Decimal  @db.Real
+  amount_paid Decimal  @default(0) @db.Real
+  status      ShareStatus @default(OPEN)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  charge Charge @relation(fields: [charge_id], references: [id])
+  user   User   @relation(fields: [user_id], references: [id])
+
+  @@map("charge_shares")
+}
+
+// Payment entity - user payments and administrator-created payments
+model Payment {
+  id                      String   @id @default(uuid())
+  user_id                 String
+  charge_id               String?
+  amount                  Decimal  @db.Real
+  currency                String   @default("EUR")
+  scheduled_date          DateTime
+  created_by              String
+  status                  PaymentStatus @default(PENDING)
+  verification_reference  String?
+  verified_at             DateTime?
+  verified_by             String?
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+
+  // Relations
+  user          User    @relation("PaymentUser", fields: [user_id], references: [id])
+  charge        Charge? @relation(fields: [charge_id], references: [id])
+  creator       User    @relation("PaymentCreatedBy", fields: [created_by], references: [id])
+  verifier      User?   @relation("PaymentVerifiedBy", fields: [verified_by], references: [id])
+
+  @@map("payments")
+}
+
+// Enums
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ShareType {
+  EQUAL
+  CUSTOM
+}
+
+enum ChargeStatus {
+  PENDING
+  GENERATED
+  CANCELLED
+}
+
+enum ShareStatus {
+  OPEN
+  SETTLED
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  CANCELLED
+}
+
