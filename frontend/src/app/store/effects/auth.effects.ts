@@ -133,4 +133,40 @@ export class AuthEffects {
       map(({ error }) => UiActions.setError({ error }))
     )
   );
+
+  setupPassword$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.setupPassword),
+      switchMap(({ token, password }) =>
+        this.authService.setupPassword({ token, password }).pipe(
+          map((response) => AuthActions.setupPasswordSuccess({ message: response.message })),
+          catchError((error) => {
+            console.error('Setup password error:', error);
+            const errorMessage = error?.error?.message || error?.message || 'Failed to setup password. Token may be invalid or expired.';
+            return of(AuthActions.setupPasswordFailure({ error: errorMessage }));
+          })
+        )
+      )
+    )
+  );
+
+  setupPasswordSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.setupPasswordSuccess),
+      tap(() => {
+        // Navigate to login page after successful password setup
+        this.router.navigate(['/login'], {
+          queryParams: { message: 'Password set successfully! You can now log in.' }
+        });
+      }),
+      map(() => UiActions.clearError())
+    ), { dispatch: false }
+  );
+
+  setupPasswordFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.setupPasswordFailure),
+      map(({ error }) => UiActions.setError({ error }))
+    )
+  );
 }

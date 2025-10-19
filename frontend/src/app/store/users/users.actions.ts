@@ -1,5 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 import { User, CreateUserDto, UpdateUserDto } from '../../models/user.model';
+import { CreateUserWithInvitationDto, CreateUserWithInvitationResponse, RegenerateInvitationResponse } from '../../services/user.service';
 
 // Load Users
 export const loadUsers = createAction(
@@ -80,6 +81,41 @@ export const deleteUserFailure = createAction(
   '[Users] Delete User Failure',
   props<{ error: string }>()
 );
+
+// Create User with Invitation
+export const createUserWithInvitation = createAction(
+  '[Users] Create User With Invitation',
+  props<{ user: CreateUserWithInvitationDto }>()
+);
+
+export const createUserWithInvitationSuccess = createAction(
+  '[Users] Create User With Invitation Success',
+  props<{ response: CreateUserWithInvitationResponse }>()
+);
+
+export const createUserWithInvitationFailure = createAction(
+  '[Users] Create User With Invitation Failure',
+  props<{ error: string }>()
+);
+
+// Regenerate Invitation
+export const regenerateInvitation = createAction(
+  '[Users] Regenerate Invitation',
+  props<{ userId: string }>()
+);
+
+export const regenerateInvitationSuccess = createAction(
+  '[Users] Regenerate Invitation Success',
+  props<{ userId: string; response: RegenerateInvitationResponse }>()
+);
+
+export const regenerateInvitationFailure = createAction(
+  '[Users] Regenerate Invitation Failure',
+  props<{ error: string }>()
+);
+
+// Clear Invitation Link (after copying or timeout)
+export const clearInvitationLink = createAction('[Users] Clear Invitation Link');
 
 // Clear Errors
 export const clearUsersError = createAction('[Users] Clear Error');

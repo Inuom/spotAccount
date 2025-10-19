@@ -20,6 +20,7 @@ export const initialState: AuthState = {
 
 export const authReducer = createReducer(
   initialState,
+  // Login actions
   on(AuthActions.login, (state) => ({
     ...state,
     loading: true,
@@ -38,6 +39,65 @@ export const authReducer = createReducer(
     loading: false,
     error,
   })),
+  
+  // Logout
   on(AuthActions.logout, () => initialState),
+  
+  // Update password actions
+  on(AuthActions.updatePassword, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(AuthActions.updatePasswordSuccess, (state) => ({
+    ...state,
+    loading: false,
+    error: null,
+  })),
+  on(AuthActions.updatePasswordFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
+  
+  // Re-authenticate actions
+  on(AuthActions.reAuthenticate, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(AuthActions.reAuthenticateSuccess, (state) => ({
+    ...state,
+    loading: false,
+    error: null,
+  })),
+  on(AuthActions.reAuthenticateFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
+  
+  // Setup password actions
+  on(AuthActions.setupPassword, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(AuthActions.setupPasswordSuccess, (state) => ({
+    ...state,
+    loading: false,
+    error: null,
+  })),
+  on(AuthActions.setupPasswordFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
+  
+  // Clear errors
+  on(AuthActions.clearAuthError, (state) => ({
+    ...state,
+    error: null,
+  })),
 );
 

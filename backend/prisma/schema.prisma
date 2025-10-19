@@ -22,12 +22,13 @@ model User {
   updated_at    DateTime @updatedAt
 
   // Relations
-  owned_subscriptions      Subscription[]          @relation("SubscriptionOwner")
+  owned_subscriptions       Subscription[]           @relation("SubscriptionOwner")
   subscription_participants SubscriptionParticipant[]
-  charge_shares            ChargeShare[]
-  payments_made            Payment[]               @relation("PaymentUser")
-  payments_created         Payment[]               @relation("PaymentCreatedBy")
-  payments_verified        Payment[]               @relation("PaymentVerifiedBy")
+  charge_shares             ChargeShare[]
+  payments_made             Payment[]                @relation("PaymentUser")
+  payments_created          Payment[]                @relation("PaymentCreatedBy")
+  payments_verified         Payment[]                @relation("PaymentVerifiedBy")
+  invitation                Invitation?
 
   @@map("users")
 }
@@ -133,6 +134,21 @@ model Payment {
   verifier      User?   @relation("PaymentVerifiedBy", fields: [verified_by], references: [id])
 
   @@map("payments")
+}
+
+// Invitation entity - one-time password setup links
+model Invitation {
+  id          String   @id @default(uuid())
+  user_id     String   @unique
+  token_hash  String
+  expires_at  DateTime
+  redeemed_at DateTime?
+  created_at  DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("invitations")
 }
 
 // Enums

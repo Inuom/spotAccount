@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
@@ -23,6 +23,10 @@ import { selectError } from '../../../store/ui/ui.selectors';
       <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
         <div *ngIf="authError$ | async as error" class="error-message">
           {{ error }}
+        </div>
+        
+        <div *ngIf="successMessage" class="success-message">
+          {{ successMessage }}
         </div>
         
         <div class="form-group">
@@ -64,6 +68,14 @@ import { selectError } from '../../../store/ui/ui.selectors';
       color: red;
       margin-bottom: 1rem;
     }
+    .success-message {
+      color: green;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-radius: 4px;
+    }
     .form-group {
       margin-bottom: 1rem;
     }
@@ -85,11 +97,13 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   authLoading$: Observable<boolean>;
   authError$: Observable<string | null>;
+  successMessage: string = '';
 
   constructor(
     private fb: FormBuilder,
     private store: Store<AppState>,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       email: ['admin@example.com', [Validators.required, Validators.email]],
@@ -101,6 +115,21 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Check for success message from query params
+    const message = this.route.snapshot.queryParams['message'];
+    if (message) {
+      this.successMessage = message;
+      // Clear the query param after displaying the message
+      setTimeout(() => {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { message: null },
+          queryParamsHandling: 'merge'
+        });
+        this.successMessage = '';
+      }, 5000);
+    }
+
     // Rediriger si déjà connecté
     this.store.select(state => state.auth.user).subscribe(user => {
       if (user) {

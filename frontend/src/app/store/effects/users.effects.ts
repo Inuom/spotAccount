@@ -74,12 +74,38 @@ export class UsersEffects {
     )
   );
 
+  createUserWithInvitation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UsersActions.createUserWithInvitation),
+      switchMap(({ user }) =>
+        this.userService.createUserWithInvitation(user).pipe(
+          map((response) => UsersActions.createUserWithInvitationSuccess({ response })),
+          catchError((error) => of(UsersActions.createUserWithInvitationFailure({ error: error.message || 'Failed to create user with invitation' })))
+        )
+      )
+    )
+  );
+
+  regenerateInvitation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UsersActions.regenerateInvitation),
+      switchMap(({ userId }) =>
+        this.userService.regenerateInvitation(userId).pipe(
+          map((response) => UsersActions.regenerateInvitationSuccess({ userId, response })),
+          catchError((error) => of(UsersActions.regenerateInvitationFailure({ error: error.message || 'Failed to regenerate invitation' })))
+        )
+      )
+    )
+  );
+
   usersSuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(
         UsersActions.createUserSuccess,
         UsersActions.updateUserSuccess,
-        UsersActions.deleteUserSuccess
+        UsersActions.deleteUserSuccess,
+        UsersActions.createUserWithInvitationSuccess,
+        UsersActions.regenerateInvitationSuccess
       ),
       map(() => UiActions.clearError())
     )
@@ -92,7 +118,9 @@ export class UsersEffects {
         UsersActions.loadUserFailure,
         UsersActions.createUserFailure,
         UsersActions.updateUserFailure,
-        UsersActions.deleteUserFailure
+        UsersActions.deleteUserFailure,
+        UsersActions.createUserWithInvitationFailure,
+        UsersActions.regenerateInvitationFailure
       ),
       map(({ error }) => UiActions.setError({ error }))
     )

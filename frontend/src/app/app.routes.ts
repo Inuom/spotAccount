@@ -13,6 +13,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/user/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'auth/setup-password',
+    loadComponent: () => import('./pages/auth/setup-password/setup-password.component').then(m => m.SetupPasswordComponent)
+  },
+  {
     path: 'admin',
     loadChildren: () => import('./pages/admin/admin.routes').then(m => m.ADMIN_ROUTES),
     canActivate: [authGuard, adminGuard]

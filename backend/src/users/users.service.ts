@@ -1,13 +1,27 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserByAdminDto } from './dto/create-user-by-admin.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import { InvitationsService } from './invitations.service';
+import { UserAuditService } from './user-audit.service';
+
+export interface CreateUserWithInvitationResult {
+  user: Omit<User, 'password_hash'>;
+  setup_link: string;
+  expires_at: Date;
+}
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly invitationsService: InvitationsService,
+    private readonly auditService: UserAuditService,
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password_hash'>> {
     const { email, name, password, role } = createUserDto;
@@ -130,5 +144,116 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  /**
+   * Create a user by admin with invitation link (no password required)
+   * Returns the user and a one-time setup link for password creation
+   */
+  async createUserWithInvitation(
+    createUserDto: CreateUserByAdminDto,
+    actorId: string,
+  ): Promise<CreateUserWithInvitationResult> {
+    const { email, name, role = Role.USER, is_active = true } = createUserDto;
+
+    try {
+      // Check if user already exists
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+
+      if (existingUser) {
+        await this.auditService.logUserCreateFailure(actorId, 'Email already exists', { email });
+        throw new ConflictException('User with this email already exists');
+      }
+
+      // Create user with a temporary password hash (will be replaced when user sets password)
+      const tempPasswordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+
+      const user = await this.prisma.user.create({
+        data: {
+          email: email.toLowerCase(),
+          name: name.trim(),
+          password_hash: tempPasswordHash,
+          role: role as Role,
+          is_active,
+        },
+      });
+
+      // Generate invitation link
+      const invitation = await this.invitationsService.generateInvitation(user.id);
+
+      // Log audit event
+      await this.auditService.logUserCreate(actorId, user.id, { role, is_active });
+      await this.auditService.logInviteGenerate(actorId, user.id, invitation.expires_at);
+
+      // Return user without password_hash
+      const { password_hash: _, ...userWithoutPassword } = user;
+
+      return {
+        user: userWithoutPassword as Omit<User, 'password_hash'>,
+        setup_link: invitation.setup_link,
+        expires_at: invitation.expires_at,
+      };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      await this.auditService.logUserCreateFailure(actorId, error.message, { email });
+      throw error;
+    }
+  }
+
+  /**
+   * Regenerate invitation link for a user
+   */
+  async regenerateInvitation(userId: string, actorId: string): Promise<{ setup_link: string; expires_at: Date }> {
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Generate new invitation link
+    const invitation = await this.invitationsService.generateInvitation(userId);
+
+    // Log audit event
+    await this.auditService.logInviteRegenerate(actorId, userId, invitation.expires_at);
+
+    return invitation;
+  }
+
+  /**
+   * Set password for a user using invitation token
+   */
+  async setPasswordWithToken(token: string, password: string): Promise<void> {
+    // Redeem the invitation token
+    const userId = await this.invitationsService.redeemInvitation(token);
+
+    // Hash the new password
+    const password_hash = await bcrypt.hash(password, 10);
+
+    // Update user password and ensure they are active
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password_hash,
+        is_active: true,
+      },
+    });
+
+    // Log audit events
+    await this.auditService.logInviteRedeem(userId);
+    await this.auditService.logPasswordSetup(userId);
+  }
+
+  /**
+   * Get invitation details for a user
+   */
+  async getInvitationDetails(userId: string): Promise<{ expires_at: Date } | null> {
+    return this.invitationsService.getInvitationDetails(userId);
   }
 }

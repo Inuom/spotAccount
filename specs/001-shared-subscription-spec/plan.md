@@ -147,6 +147,30 @@ infrastructure/
 - **tasks.md**: Detailed implementation tasks to be generated via `/speckit.tasks` command
 - **Sprint Planning**: Ready for task prioritization and parallel execution planning
 
+## Feature Planning Addendum: Admin Creates Users (Priority)
+
+This addendum updates the plan to include the new priority user story: Admin can create new users and share a one-time password setup link (no email sending).
+
+Artifacts for this feature:
+- Spec: `specs/001-shared-subscription-spec/feature-admin-create-user/spec.md`
+- Research: `specs/001-shared-subscription-spec/feature-admin-create-user/research.md`
+- Data model: `specs/001-shared-subscription-spec/feature-admin-create-user/data-model.md`
+- Contracts (OpenAPI): `specs/001-shared-subscription-spec/feature-admin-create-user/contracts/openapi.yaml`
+- Quickstart: `specs/001-shared-subscription-spec/feature-admin-create-user/quickstart.md`
+- Checklist: `specs/001-shared-subscription-spec/feature-admin-create-user/checklists/requirements.md`
+
+Key decisions (from spec/research):
+- Provisioning uses a one-time setup link; no emails sent by the system
+- Admin fills profile fields (email, name, role, status); user sets only password
+- Name required; activation occurs on password set; token is single-use with expiry
+
+Integration impacts:
+- Backend: new endpoints for create user, regenerate setup link, setup-password; secure token issuance and audit events
+- Frontend: Admin UI to create user and display/copy link; optional regenerate action; align with RBAC guards
+- Ops/Security: token storage hashed, token expiry policy (default 48h), one-time redemption
+
+Constitution re-check: No violations introduced. Requirements are technology-agnostic and testable; security posture preserved.
+
 ## Complexity Tracking
 
 No violations identified. All constitution gates satisfied with proper justification for technology choices.

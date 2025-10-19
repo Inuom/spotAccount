@@ -192,6 +192,39 @@
 - [ ] T112 [P] [US4] Create User balance page in frontend/src/app/pages/user/balance/
 - [ ] T113 [P] [US4] Create Report export component in frontend/src/app/components/report-export/
 
+## Phase 8: User Story 6 - Admin Creates Users (P1) ✅ COMPLETED
+
+**Goal**: Admin can create new users and share a one-time password setup link (no email)
+**Independent Test**: Admin creates user → copies setup link → user sets password via link → user can login
+
+### T129-T138: Backend Implementation
+
+- [X] T129 [P] [US6] Add Invitation model to Prisma schema in backend/prisma/schema.prisma
+- [X] T130 [P] [US6] Create Prisma migration for Invitation in backend/prisma/migrations/
+- [X] T131 [P] [US6] Implement Invitation repository in backend/src/users/invitations.repository.ts
+- [X] T132 [P] [US6] Implement Invitation service (token gen, store, redeem) in backend/src/users/invitations.service.ts
+- [X] T133 [P] [US6] Implement Create User endpoint returning setup_link in backend/src/users/users.controller.ts
+- [X] T134 [P] [US6] Implement Regenerate setup link endpoint in backend/src/users/users.controller.ts
+- [X] T135 [P] [US6] Implement setup-password endpoint in backend/src/auth/auth.controller.ts
+- [X] T136 [P] [US6] Add audit logging for user create/invite in backend/src/users/user-audit.service.ts
+- [X] T137 [P] [US6] Create DTOs (create-user, setup-password) in backend/src/users/dto/ and backend/src/auth/dto/
+- [X] T138 [P] [US6] Wire modules/providers in backend/src/users/users.module.ts and backend/src/auth/auth.module.ts
+
+### T139-T143: Frontend Implementation
+
+- [X] T139 [P] [US6] Add create user and regenerate link methods in frontend/src/app/services/user.service.ts
+- [X] T140 [P] [US6] Add setupPassword method in frontend/src/app/services/auth.service.ts
+- [X] T141 [P] [US6] Update Admin Users page to create user and copy setup link in frontend/src/app/pages/admin/users/users.component.ts
+- [X] T142 [P] [US6] Add NgRx actions/effects/selectors for user creation/link in frontend/src/app/store/users/
+- [X] T143 [P] [US6] Show link expiry and regenerate action in frontend/src/app/pages/admin/users/users.component.ts
+
+### Additional Implementation (Missing from Original Tasks)
+
+- [X] T144 [P] [US6] Create setup password page component in frontend/src/app/pages/auth/setup-password/
+- [X] T145 [P] [US6] Add route for setup password page at /auth/setup-password
+- [X] T146 [P] [US6] Add NgRx actions/effects for setup password functionality
+- [X] T147 [P] [US6] Update login page to show success message from setup password
+
 ## Dependencies
 
 ### User Story Dependencies

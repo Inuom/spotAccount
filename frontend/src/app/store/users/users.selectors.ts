@@ -49,3 +49,23 @@ export const selectActiveUsers = createSelector(
   (users) => users.filter(user => user.is_active)
 );
 
+export const selectInvitationLink = createSelector(
+  selectUsersState,
+  (state) => state.invitationLink
+);
+
+export const selectInvitationExpiresAt = createSelector(
+  selectUsersState,
+  (state) => state.invitationExpiresAt
+);
+
+export const selectInvitationUserId = createSelector(
+  selectUsersState,
+  (state) => state.invitationUserId
+);
+
+export const selectHasInvitationLink = createSelector(
+  selectInvitationLink,
+  (link) => !!link
+);
+

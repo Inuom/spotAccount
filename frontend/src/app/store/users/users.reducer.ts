@@ -7,6 +7,9 @@ export interface UsersState extends EntityState<User> {
   selectedUserId: string | null;
   loading: boolean;
   error: string | null;
+  invitationLink: string | null;
+  invitationExpiresAt: string | null;
+  invitationUserId: string | null;
 }
 
 export const usersAdapter: EntityAdapter<User> = createEntityAdapter<User>({
@@ -18,6 +21,9 @@ export const initialState: UsersState = usersAdapter.getInitialState({
   selectedUserId: null,
   loading: false,
   error: null,
+  invitationLink: null,
+  invitationExpiresAt: null,
+  invitationUserId: null,
 });
 
 export const usersReducer = createReducer(
@@ -120,6 +126,66 @@ export const usersReducer = createReducer(
     ...state,
     loading: false,
     error,
+  })),
+  
+  // Create User with Invitation
+  on(UsersActions.createUserWithInvitation, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+    invitationLink: null,
+    invitationExpiresAt: null,
+    invitationUserId: null,
+  })),
+  on(UsersActions.createUserWithInvitationSuccess, (state, { response }) =>
+    usersAdapter.addOne(response.user, {
+      ...state,
+      loading: false,
+      error: null,
+      invitationLink: response.setup_link,
+      invitationExpiresAt: response.expires_at,
+      invitationUserId: response.user.id,
+    })
+  ),
+  on(UsersActions.createUserWithInvitationFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+    invitationLink: null,
+    invitationExpiresAt: null,
+    invitationUserId: null,
+  })),
+  
+  // Regenerate Invitation
+  on(UsersActions.regenerateInvitation, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+    invitationLink: null,
+    invitationExpiresAt: null,
+  })),
+  on(UsersActions.regenerateInvitationSuccess, (state, { userId, response }) => ({
+    ...state,
+    loading: false,
+    error: null,
+    invitationLink: response.setup_link,
+    invitationExpiresAt: response.expires_at,
+    invitationUserId: userId,
+  })),
+  on(UsersActions.regenerateInvitationFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+    invitationLink: null,
+    invitationExpiresAt: null,
+  })),
+  
+  // Clear Invitation Link
+  on(UsersActions.clearInvitationLink, (state) => ({
+    ...state,
+    invitationLink: null,
+    invitationExpiresAt: null,
+    invitationUserId: null,
   })),
   
   // Clear Error

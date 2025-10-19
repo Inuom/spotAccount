@@ -45,5 +45,50 @@ export class UserService {
   deleteUser(id: string): Observable<void> {
     return this.apiService.delete<void>(`${this.endpoint}/${id}`);
   }
+
+  /**
+   * Create a user with invitation link (admin only)
+   */
+  createUserWithInvitation(data: CreateUserWithInvitationDto): Observable<CreateUserWithInvitationResponse> {
+    return this.apiService.post<CreateUserWithInvitationResponse>(`${this.endpoint}/create-with-invitation`, data);
+  }
+
+  /**
+   * Regenerate invitation link for a user (admin only)
+   */
+  regenerateInvitation(userId: string): Observable<RegenerateInvitationResponse> {
+    return this.apiService.post<RegenerateInvitationResponse>(`${this.endpoint}/${userId}/invitation`, {});
+  }
+
+  /**
+   * Get invitation details for a user
+   */
+  getInvitationDetails(userId: string): Observable<InvitationDetailsResponse> {
+    return this.apiService.get<InvitationDetailsResponse>(`${this.endpoint}/${userId}/invitation`);
+  }
+}
+
+// Additional interfaces for invitation-related operations
+export interface CreateUserWithInvitationDto {
+  email: string;
+  name: string;
+  role?: 'ADMIN' | 'USER';
+  is_active?: boolean;
+}
+
+export interface CreateUserWithInvitationResponse {
+  user: User;
+  setup_link: string;
+  expires_at: string;
+}
+
+export interface RegenerateInvitationResponse {
+  setup_link: string;
+  expires_at: string;
+}
+
+export interface InvitationDetailsResponse {
+  has_pending_invitation: boolean;
+  expires_at?: string;
 }
 

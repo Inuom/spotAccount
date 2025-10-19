@@ -10,8 +10,10 @@ import {
 import { AuthService, LoginDto } from './auth.service';
 import { PasswordUpdateService } from './password-update.service';
 import { UpdatePasswordDto, UpdatePasswordResponseDto } from './dto/update-password.dto';
+import { SetupPasswordDto } from './dto/setup-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
+import { UsersService } from '../users/users.service';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -26,6 +28,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly passwordUpdateService: PasswordUpdateService,
+    private readonly usersService: UsersService,
   ) {}
 
   /**
@@ -76,6 +79,22 @@ export class AuthController {
     );
 
     return { authenticated: isAuthenticated };
+  }
+
+  /**
+   * Setup password endpoint - public
+   * Used by new users to set their password using invitation token
+   */
+  @Public()
+  @Post('setup-password')
+  @HttpCode(HttpStatus.OK)
+  async setupPassword(@Body() setupPasswordDto: SetupPasswordDto): Promise<{ message: string }> {
+    await this.usersService.setPasswordWithToken(
+      setupPasswordDto.token,
+      setupPasswordDto.password,
+    );
+
+    return { message: 'Password set successfully. You can now log in.' };
   }
 }
 

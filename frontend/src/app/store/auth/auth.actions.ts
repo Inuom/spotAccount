@@ -51,6 +51,22 @@ export const reAuthenticateFailure = createAction(
   props<{ error: string }>()
 );
 
+// Setup Password Actions
+export const setupPassword = createAction(
+  '[Auth] Setup Password',
+  props<{ token: string; password: string }>()
+);
+
+export const setupPasswordSuccess = createAction(
+  '[Auth] Setup Password Success',
+  props<{ message: string }>()
+);
+
+export const setupPasswordFailure = createAction(
+  '[Auth] Setup Password Failure',
+  props<{ error: string }>()
+);
+
 // Clear Errors
 export const clearAuthError = createAction('[Auth] Clear Error');
 

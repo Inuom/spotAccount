@@ -26,6 +26,15 @@ export interface ReAuthenticateResponse {
   authenticated: boolean;
 }
 
+export interface SetupPasswordDto {
+  token: string;
+  password: string;
+}
+
+export interface SetupPasswordResponse {
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -53,6 +62,13 @@ export class AuthService {
    */
   reAuthenticate(password: string): Observable<ReAuthenticateResponse> {
     return this.apiService.post<ReAuthenticateResponse>('auth/re-authenticate', { password });
+  }
+
+  /**
+   * Setup password using invitation token (public endpoint)
+   */
+  setupPassword(setupPasswordDto: SetupPasswordDto): Observable<SetupPasswordResponse> {
+    return this.apiService.post<SetupPasswordResponse>('auth/setup-password', setupPasswordDto);
   }
 
   /**
