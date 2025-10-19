@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Subscription, CreateSubscriptionDto, UpdateSubscriptionDto } from '../../models/subscription.model';
+import { Subscription, CreateSubscriptionDto, UpdateSubscriptionDto, AddParticipantDto } from '../../models/subscription.model';
 import { Charge } from '../../models/charge.model';
 
 // Load Subscriptions
@@ -105,6 +105,22 @@ export const generateChargesSuccess = createAction(
 
 export const generateChargesFailure = createAction(
   '[Subscriptions] Generate Charges Failure',
+  props<{ error: string }>()
+);
+
+// Add Participant
+export const addParticipant = createAction(
+  '[Subscriptions] Add Participant',
+  props<{ subscriptionId: string; participant: AddParticipantDto }>()
+);
+
+export const addParticipantSuccess = createAction(
+  '[Subscriptions] Add Participant Success',
+  props<{ subscription: Subscription }>()
+);
+
+export const addParticipantFailure = createAction(
+  '[Subscriptions] Add Participant Failure',
   props<{ error: string }>()
 );
 

@@ -1,37 +1,54 @@
 # Implementation Plan: Shared Subscription Debt Manager
 
-**Branch**: `001-shared-subscription-spec` | **Date**: 2025-01-22 | **Spec**: specs/001-shared-subscription-spec/spec.md
+**Branch**: `001-shared-subscription-spec` | **Date**: 2025-01-22 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-shared-subscription-spec/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-A shared subscription debt management system where administrators configure subscriptions with participants and billing schedules, the system generates automated charges and shares, and users can submit payments that administrators verify to settle debts. Technical approach uses NestJS backend with PostgreSQL, Angular frontend with NgRx state management, deployed on AWS with complete CI/CD pipeline targeting stable operation before future Angular signals migration.
+Shared Subscription Debt Manager enables administrators to create recurring shared expense subscriptions, automatically calculate participant shares, and manage payment verification workflows. The system supports adding existing users to existing subscriptions with proper share recalculation and future charge management.
 
 ## Technical Context
 
-**Language/Version**: TypeScript/Node.js 18+, Angular 17+, NestJS 10+  
-**Primary Dependencies**: NestJS, Angular, NgRx, Prisma ORM, PostgreSQL 14+  
-**Storage**: PostgreSQL database with Prisma ORM for type-safe access  
-**Testing**: Jest (backend), Jasmine/Karma (frontend), Cypress (E2E) targeting 80% coverage  
-**Target Platform**: Web application (SPA + REST API) deployed on AWS infrastructure  
-**Project Type**: Web application with separate frontend and backend components  
-**Performance Goals**: 2-second response time for all user actions, 99% uptime during business hours  
-**Constraints**: Support up to 100 total users, 20 users per subscription, last-write-wins concurrency  
-**Scale/Scope**: Small group financial application with full-stack web architecture
+**Language/Version**: TypeScript 5.0+, Node.js 18+ (LTS), Angular 17+  
+**Primary Dependencies**: NestJS, Prisma ORM, PostgreSQL, NgRx, Angular Material  
+**Storage**: PostgreSQL with Prisma ORM for data persistence and migrations  
+**Testing**: Jest (backend), Jasmine/Karma (frontend), Cypress (E2E)  
+**Target Platform**: Web application (backend API + frontend SPA)  
+**Project Type**: Web application with frontend/backend separation  
+**Performance Goals**: <2 second response times for all user actions, 99% uptime during business hours  
+**Constraints**: <100 total users, <20 users per subscription, 80% test coverage minimum  
+**Scale/Scope**: Small group scale (5-20 users per subscription), financial data integrity, audit compliance
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-✅ **Lint/type checks**: TypeScript strict mode enabled for both frontend and backend  
-✅ **Unit test coverage**: Target ≥80% implemented with Jest (backend) and Jasmine/Karma (frontend)  
-✅ **Integration tests**: Planned for auth, subscriptions/charges, and payments endpoints  
-✅ **E2E tests**: Planned for login, subscription creation, payment creation & verification flows  
-✅ **Security**: HTTPS enforced via CloudFront/ALB, bcrypt password hashing, RBAC with admin/user roles  
-✅ **Observability**: Structured JSON logs planned with CloudWatch, `/healthz` endpoint required  
-✅ **Documentation**: API docs via OpenAPI, inline code documentation, spec updates
+### Security & Access Control
+- ✅ HTTPS enforced in all environments via CloudFront/ALB
+- ✅ Password hashing with bcrypt implemented
+- ✅ RBAC with roles `admin` and `user` with least privilege default
+- ✅ Rate limiting on API endpoints configured
+- ✅ Input validation on frontend and backend implemented
+- ✅ Audit logs for critical actions (payment verification, user/admin changes)
+
+### Testing & Quality
+- ✅ Unit test coverage ≥ 80% across backend and frontend
+- ✅ Integration tests for auth, subscriptions/charges, payments endpoints
+- ✅ E2E tests for login, subscription creation, payment creation & verification
+- ✅ All tests and linters run in CI with failing pipelines blocking merges
+
+### Infrastructure & Observability
+- ✅ Terraform for AWS infrastructure provisioning
+- ✅ Structured JSON logs shipped to CloudWatch
+- ✅ `/healthz` endpoint exposed for liveness checks
+- ✅ PostgreSQL automated backups with AWS RDS snapshots
+
+### Documentation & Governance
+- ✅ API docs and spec updated for behavior changes
+- ✅ All changes via PR with approval required
+- ✅ Constitution compliance verified in planning phase
 
 ## Project Structure
 
@@ -52,126 +69,85 @@ specs/[###-feature]/
 ```
 backend/
 ├── src/
-│   ├── app.module.ts
-│   ├── main.ts
-│   ├── auth/
-│   │   ├── auth.module.ts
-│   │   ├── jwt-auth.guard.ts
-│   │   ├── jwt.strategy.ts
-│   │   ├── roles.guard.ts
-│   │   └── decorators/
-│   │       ├── public.decorator.ts
-│   │       └── roles.decorator.ts
-│   ├── users/
-│   │   ├── users.module.ts
-│   │   ├── users.service.ts
-│   │   ├── users.controller.ts
-│   │   ├── users.repository.ts
-│   │   └── dto/
-│   ├── subscriptions/
-│   │   ├── subscriptions.module.ts
-│   │   ├── subscriptions.service.ts
-│   │   ├── subscriptions.controller.ts
-│   │   ├── subscriptions.repository.ts
-│   │   ├── subscription-participants.service.ts
-│   │   └── dto/
-│   ├── charges/
-│   │   ├── charges.module.ts
-│   │   ├── charges.service.ts
-│   │   ├── charges.controller.ts
-│   │   ├── charges.repository.ts
-│   │   └── charge-shares.service.ts
-│   ├── database/
-│   │   ├── database.module.ts
-│   │   └── prisma.service.ts
-│   ├── health/
-│   │   ├── health.module.ts
-│   │   └── health.controller.ts
-│   └── common/
-│       ├── filters/
-│       ├── interceptors/
-│       └── middleware/
+│   ├── auth/                    # Authentication and authorization
+│   ├── users/                   # User management and invitations
+│   ├── subscriptions/           # Subscription and participant management
+│   ├── charges/                 # Charge generation and share calculation
+│   ├── payments/                # Payment verification and workflow
+│   ├── reports/                 # Balance and reporting services
+│   ├── database/                # Prisma service and database module
+│   ├── health/                  # Health check endpoints
+│   └── common/                  # Shared middleware and utilities
 ├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
-├── test/
-│   ├── setup.ts
-│   └── setupe2e.ts
-└── tests/
+│   ├── schema.prisma           # Database schema definition
+│   ├── migrations/             # Database migration files
+│   └── seed.ts                 # Database seeding script
+└── tests/                      # Backend test suites
 
 frontend/
-├── src/
-│   ├── app/
-│   │   ├── app.component.ts
-│   │   ├── app.config.ts
-│   │   ├── app.routes.ts
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── models/
-│   │   ├── store/
-│   │   │   ├── users/
-│   │   │   ├── subscriptions/
-│   │   │   ├── charges/
-│   │   │   └── effects/
-│   │   ├── guards/
-│   │   └── interceptors/
-│   ├── assets/
-│   └── environments/
-├── cypress/
-├── tests/
-│   ├── unit/
-│   └── e2e/
-└── karma.conf.js
-
-infrastructure/
-└── terraform/
+├── src/app/
+│   ├── store/                  # NgRx state management
+│   │   ├── auth/              # Authentication state
+│   │   ├── users/             # User management state
+│   │   ├── subscriptions/     # Subscription state
+│   │   ├── charges/           # Charge state
+│   │   ├── payments/          # Payment state
+│   │   └── ui/                # Global UI state
+│   ├── pages/                 # Route-based page components
+│   │   ├── admin/             # Administrative interfaces
+│   │   ├── user/              # User-focused interfaces
+│   │   └── auth/              # Authentication pages
+│   ├── components/            # Reusable UI components
+│   ├── services/              # API service layer
+│   └── interceptors/          # HTTP interceptors
+└── tests/                     # Frontend test suites
 ```
 
-**Structure Decision**: Web application with separate frontend and backend components. Backend uses NestJS with feature modules (auth, users, subscriptions, charges) following domain-driven design. Frontend uses Angular with NgRx state management organized by feature modules and smart/dumb component architecture.
+**Structure Decision**: Web application with clear separation between backend API (NestJS) and frontend SPA (Angular). Backend organized by feature modules (auth, users, subscriptions, payments, reports) with shared infrastructure. Frontend uses NgRx for state management with feature-based store modules aligned with business domain.
 
-## Implementation Status
+## User Story 7 - Admin Add Existing User to Subscription (Priority: P2)
 
-### Phase 0: Research & Analysis ✅ COMPLETE
-- **research.md**: Generated and updated with all technical decisions resolved
-- **Database Decision**: Updated from SQLite to PostgreSQL with Docker containerization
-- **Architecture Decisions**: NgRx state management, NestJS backend modules, Angular frontend components
+### Goal
+Enable administrators to add existing users as participants to existing subscriptions with proper share configuration and future charge recalculation.
 
-### Phase 1: Design & Contracts ✅ COMPLETE  
-- **data-model.md**: Generated with complete entity definitions for PostgreSQL schema
-- **contracts/openapi.yaml**: Generated comprehensive API specification with all endpoints
-- **quickstart.md**: Generated setup instructions for PostgreSQL development environment
-- **Agent Context**: Updated Cursor IDE context with technical stack information
+### Independent Test
+Admin adds existing user to subscription via details view; verify equal shares recalculate, future charges include new participant, historical charges remain unchanged.
 
-### Phase 2: Task Planning 🟡 NEXT
-- **tasks.md**: Detailed implementation tasks to be generated via `/speckit.tasks` command
-- **Sprint Planning**: Ready for task prioritization and parallel execution planning
+### Acceptance Scenarios
+1. Given an admin is viewing subscription details, when they add an existing user not already in the subscription, then the user becomes a participant with specified share type and the system recalculates equal shares for all participants.
+2. Given an admin attempts to add a user already in the subscription, when they submit the form, then the system prevents the addition and displays a clear error message.
+3. Given a new participant is added mid-cycle, when future charges are generated, then the new participant receives their share but historical charges remain unchanged.
 
-## Feature Planning Addendum: Admin Creates Users (Priority)
+### Implementation Tasks
 
-This addendum updates the plan to include the new priority user story: Admin can create new users and share a one-time password setup link (no email sending).
+#### Backend Implementation
+- **T148**: Implement add participant endpoint in `backend/src/subscriptions/subscriptions.controller.ts`
+- **T149**: Create add participant DTOs and validation in `backend/src/subscriptions/dto/add-participant.dto.ts`
+- **T150**: Implement participant addition service logic in `backend/src/subscriptions/subscriptions.service.ts`
+- **T151**: Implement share recalculation logic for existing participants in `backend/src/subscriptions/share-calculation.service.ts`
+- **T152**: Add duplicate participant validation in `backend/src/subscriptions/participant-validation.service.ts`
+- **T153**: Update SubscriptionParticipant repository for participant management in `backend/src/subscriptions/subscriptions.repository.ts`
+- **T154**: Implement audit logging for participant additions in `backend/src/subscriptions/subscription-audit.service.ts`
 
-Artifacts for this feature:
-- Spec: `specs/001-shared-subscription-spec/feature-admin-create-user/spec.md`
-- Research: `specs/001-shared-subscription-spec/feature-admin-create-user/research.md`
-- Data model: `specs/001-shared-subscription-spec/feature-admin-create-user/data-model.md`
-- Contracts (OpenAPI): `specs/001-shared-subscription-spec/feature-admin-create-user/contracts/openapi.yaml`
-- Quickstart: `specs/001-shared-subscription-spec/feature-admin-create-user/quickstart.md`
-- Checklist: `specs/001-shared-subscription-spec/feature-admin-create-user/checklists/requirements.md`
+#### Frontend Implementation  
+- **T155**: Update subscription details page to show add participant button in `frontend/src/app/pages/admin/subscriptions/subscription-details/`
+- **T156**: Create add participant component with user selection in `frontend/src/app/components/add-participant/`
+- **T157**: Add participant selection service and user search in `frontend/src/app/services/subscription.service.ts`
+- **T158**: Update subscription NgRx store for participant management in `frontend/src/app/store/subscriptions/`
+- **T159**: Create participant management actions and effects in `frontend/src/app/store/subscriptions/subscription.effects.ts`
+- **T160**: Add validation and error handling for duplicate participants in `frontend/src/app/components/add-participant/add-participant.component.ts`
 
-Key decisions (from spec/research):
-- Provisioning uses a one-time setup link; no emails sent by the system
-- Admin fills profile fields (email, name, role, status); user sets only password
-- Name required; activation occurs on password set; token is single-use with expiry
-
-Integration impacts:
-- Backend: new endpoints for create user, regenerate setup link, setup-password; secure token issuance and audit events
-- Frontend: Admin UI to create user and display/copy link; optional regenerate action; align with RBAC guards
-- Ops/Security: token storage hashed, token expiry policy (default 48h), one-time redemption
-
-Constitution re-check: No violations introduced. Requirements are technology-agnostic and testable; security posture preserved.
+### Technical Requirements
+- **FR-018**: The system MUST allow administrators to add existing users as participants to existing subscriptions with proper share type and value configuration.
+- **FR-018.1**: When adding new participants to existing subscriptions, the system MUST recalculate all equal shares to distribute evenly among all participants (existing and new).
+- **FR-018.2**: When adding new participants to existing subscriptions, the system MUST only affect future charges; historical charges and their participant shares remain unchanged.
+- **FR-018.3**: The system MUST prevent adding duplicate participants to the same subscription and provide clear error messages when attempting to add a user who is already a participant.
 
 ## Complexity Tracking
 
-No violations identified. All constitution gates satisfied with proper justification for technology choices.
+*Fill ONLY if Constitution Check has violations that must be justified*
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| None | All requirements align with established patterns | Constitution compliance maintained |
 

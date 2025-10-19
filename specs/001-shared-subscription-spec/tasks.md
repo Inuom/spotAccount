@@ -1,7 +1,7 @@
 # Tasks: Shared Subscription Debt Manager
 
-**Total Tasks**: 128  
-**User Stories**: 5 (P1: 3, P2: 1, P3: 1)  
+**Total Tasks**: 141  
+**User Stories**: 6 (P1: 3, P2: 2, P3: 1)  
 **Parallel Opportunities**: 52 tasks can be executed in parallel  
 **MVP Scope**: User Stories 1, 2, and 5 (P1) provide complete subscription, payment verification, and authentication functionality
 
@@ -225,6 +225,30 @@
 - [X] T146 [P] [US6] Add NgRx actions/effects for setup password functionality
 - [X] T147 [P] [US6] Update login page to show success message from setup password
 
+## Phase 9: User Story 7 - Admin Add Existing User to Subscription (P2)
+
+**Goal**: Enable administrators to add existing users as participants to existing subscriptions with proper share configuration and future charge recalculation.  
+**Independent Test**: Admin adds existing user to subscription via details view; verify equal shares recalculate, future charges include new participant, historical charges unchanged.
+
+### T148-T154: Backend Implementation
+
+- [X] T148 [P] [US7] Implement add participant endpoint in backend/src/subscriptions/subscriptions.controller.ts
+- [X] T149 [P] [US7] Create add participant DTOs and validation in backend/src/subscriptions/dto/add-participant.dto.ts
+- [X] T150 [P] [US7] Implement participant addition service logic in backend/src/subscriptions/subscriptions.service.ts
+- [X] T151 [P] [US7] Implement share recalculation logic for existing participants in backend/src/subscriptions/share-calculation.service.ts
+- [X] T152 [P] [US7] Add duplicate participant validation in backend/src/subscriptions/participant-validation.service.ts
+- [X] T153 [P] [US7] Update SubscriptionParticipant repository for participant management in backend/src/subscriptions/subscriptions.repository.ts
+- [X] T154 [P] [US7] Implement audit logging for participant additions in backend/src/subscriptions/subscription-audit.service.ts
+
+### T155-T160: Frontend Implementation
+
+- [X] T155 [P] [US7] Update subscription details page to show add participant button in frontend/src/app/pages/admin/subscriptions/subscription-details/
+- [X] T156 [P] [US7] Create add participant component with user selection in frontend/src/app/components/add-participant/
+- [X] T157 [P] [US7] Add participant selection service and user search in frontend/src/app/services/subscription.service.ts
+- [X] T158 [P] [US7] Update subscription NgRx store for participant management in frontend/src/app/store/subscriptions/
+- [X] T159 [P] [US7] Create participant management actions and effects in frontend/src/app/store/subscriptions/subscription.effects.ts
+- [X] T160 [P] [US7] Add validation and error handling for duplicate participants in frontend/src/app/components/add-participant/add-participant.component.ts
+
 ## Dependencies
 
 ### User Story Dependencies
@@ -232,6 +256,7 @@
 - **US2** (Payment Verification) → **US3** (User Payment Management)
 - **US3** (User Payment Management) → **US4** (Reports and Balances)
 - **US5** (Password Updates) → Can be implemented alongside other P1 stories
+- **US1** (Subscription Management) → **US7** (Add Existing User to Subscription)
 
 ### Technical Dependencies
 - **Phase 1** → **Phase 2** (Setup before infrastructure)
@@ -295,6 +320,15 @@ T099, T100, T101, T102, T103, T104, T105, T106, T107, T108
 T109, T110, T111, T112, T113
 ```
 
+### Phase 9 (US7) - 13 parallel tasks
+```bash
+# Backend participant management (7 tasks)
+T148, T149, T150, T151, T152, T153, T154
+
+# Frontend participant UI (6 tasks)
+T155, T156, T157, T158, T159, T160
+```
+
 ### PostgreSQL Migration (Priority: HIGH) - 15 parallel tasks
 ```bash
 # Database migration (10 tasks)
@@ -312,6 +346,7 @@ T124, T125, T126, T127, T128
 3. **Phase 4**: Implement US2 (Payment Verification) - Essential for debt settlement
 4. **Phase 5**: Implement US5 (Password Updates) - P1 priority authentication features
 5. **Phase 6-7**: Implement US3-4 (User Management, Reports) - Enhanced features
+6. **Phase 9**: Implement US7 (Add Existing User to Subscription) - P2 subscription management enhancement
 
 ### Incremental Delivery
 - **Sprint 1**: Setup + Infrastructure (T001-T025, T090-T095)
@@ -320,7 +355,8 @@ T124, T125, T126, T127, T128
 - **Sprint 4**: US2 Backend (T053-T064)
 - **Sprint 5**: US2 Frontend + US5 Implementation (T065-T072, T073-T084)
 - **Sprint 6**: US3-4 Implementation (T085-T113)
-- **Sprint 7**: PostgreSQL Migration (T114-T128)
+- **Sprint 7**: US7 Implementation (T148-T160)
+- **Sprint 8**: PostgreSQL Migration (T114-T128)
 
 ### Testing Strategy
 - **Unit Tests**: Each service and component
@@ -363,6 +399,7 @@ T124, T125, T126, T127, T128
 - **Phase 5**: Password update functionality working with current password verification
 - **Phase 6**: User payment management functional
 - **Phase 7**: Reports and balances accurate
+- **Phase 9**: Admin can add existing users to subscriptions with proper share recalculation
 
 ### Independent Test Criteria
 - **US1**: Configure subscription → Generate charges → Verify totals
@@ -370,6 +407,7 @@ T124, T125, T126, T127, T128
 - **US3**: User creates payment → Edits payment → Deletes payment
 - **US4**: Select date → View report → Confirm accuracy
 - **US5**: User updates password with current password verification → Confirm login works with new password
+- **US7**: Admin adds existing user to subscription → Verify equal shares recalculate → Confirm future charges include new participant → Verify historical charges unchanged
 
 ### Quality Gates
 - All tests passing (unit, integration, E2E)

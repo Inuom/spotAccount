@@ -96,6 +96,22 @@ An administrator or user can update their own password to maintain account secur
 
 ---
 
+### User Story 7 - Admin Add Existing User to Subscription (Priority: P2)
+
+An administrator can add an existing user as a participant to an existing subscription with proper share configuration.
+
+**Why this priority**: Enables subscription management flexibility and supports changing group compositions over time.
+
+**Independent Test**: Admin adds existing user to subscription via details view; verify equal shares recalculate, future charges include new participant, historical charges unchanged.
+
+**Acceptance Scenarios**:
+
+1. Given an admin is viewing subscription details, when they add an existing user not already in the subscription, then the user becomes a participant with specified share type and the system recalculates equal shares for all participants.
+2. Given an admin attempts to add a user already in the subscription, when they submit the form, then the system prevents the addition and displays a clear error message.
+3. Given a new participant is added mid-cycle, when future charges are generated, then the new participant receives their share but historical charges remain unchanged.
+
+---
+
 ### Edge Cases
 
 - Participants added/removed mid-cycle: only future charges are impacted; prior charges remain.
@@ -142,6 +158,14 @@ An administrator or user can update their own password to maintain account secur
   access controls to protect user privacy.
 - **FR-017**: The system MUST handle concurrent access using last-write-wins semantics without
   notifying users of conflicts, ensuring data consistency.
+- **FR-018**: The system MUST allow administrators to add existing users as participants to existing
+  subscriptions with proper share type and value configuration.
+- **FR-018.1**: When adding new participants to existing subscriptions, the system MUST recalculate 
+  all equal shares to distribute evenly among all participants (existing and new).
+- **FR-018.2**: When adding new participants to existing subscriptions, the system MUST only affect
+  future charges; historical charges and their participant shares remain unchanged.
+- **FR-018.3**: The system MUST prevent adding duplicate participants to the same subscription and
+  provide clear error messages when attempting to add a user who is already a participant.
 
 ### Non-Functional Requirements
 
@@ -221,3 +245,7 @@ An administrator or user can update their own password to maintain account secur
 
 - Q: How should the initial admin user be created during application setup? → A: Create admin user via database seed script with '0000' password, no forced change
 - Q: When should password update functionality be implemented and what priority? → A: Add as User Story 5 with P1 priority in Phase 3, implemented alongside core functionality
+- Q: How should the admin access the functionality to add users to existing subscriptions? → A: Add button in subscription details view after clicking "View Details"
+- Q: How should share calculations be handled when adding a new user to an existing subscription? → A: Recalculate all equal shares to distribute evenly among all participants including new user
+- Q: How should the system handle historical charges when a new participant is added? → A: New participant only affects future charges, existing charges remain unchanged
+- Q: What validation should occur when adding a user who already exists as a participant in the subscription? → A: Prevent duplicate participation with clear error message showing the user is already a participant

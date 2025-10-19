@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
@@ -482,7 +483,8 @@ export class SubscriptionsComponent implements OnInit {
 
   constructor(
     private store: Store<AppState>,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.subscriptions$ = this.store.select(selectSubscriptions);
     this.users$ = this.store.select(selectUsers);
@@ -561,8 +563,7 @@ export class SubscriptionsComponent implements OnInit {
 
   viewSubscriptionDetails(id: string): void {
     this.store.dispatch(SubscriptionsActions.loadSubscription({ id }));
-    // Navigate to details page or show modal
-    console.log('View subscription details:', id);
+    this.router.navigate(['/admin/subscriptions', id]);
   }
 
   generateCharges(subscriptionId: string): void {

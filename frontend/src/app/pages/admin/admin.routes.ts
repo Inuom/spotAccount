@@ -12,7 +12,16 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'subscriptions',
-    loadComponent: () => import('./subscriptions/subscriptions.component').then(m => m.SubscriptionsComponent)
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./subscriptions/subscriptions.component').then(m => m.SubscriptionsComponent)
+      },
+      {
+        path: ':id',
+        loadComponent: () => import('./subscriptions/subscription-details/subscription-details.component').then(m => m.SubscriptionDetailsComponent)
+      }
+    ]
   },
   {
     path: 'users',

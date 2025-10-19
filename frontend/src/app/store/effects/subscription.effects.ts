@@ -98,6 +98,18 @@ export class SubscriptionEffects {
     )
   );
 
+  addParticipant$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(SubscriptionsActions.addParticipant),
+      switchMap(({ subscriptionId, participant }) =>
+        this.subscriptionService.addParticipant(subscriptionId, participant).pipe(
+          map((updatedSubscription) => SubscriptionsActions.addParticipantSuccess({ subscription: updatedSubscription })),
+          catchError((error) => of(SubscriptionsActions.addParticipantFailure({ error: error.message || 'Failed to add participant' })))
+        )
+      )
+    )
+  );
+
   subscriptionsFailure$ = createEffect(() =>
     this.actions$.pipe(
       ofType(
@@ -107,7 +119,8 @@ export class SubscriptionEffects {
         SubscriptionsActions.createSubscriptionFailure,
         SubscriptionsActions.updateSubscriptionFailure,
         SubscriptionsActions.deleteSubscriptionFailure,
-        SubscriptionsActions.generateChargesFailure
+        SubscriptionsActions.generateChargesFailure,
+        SubscriptionsActions.addParticipantFailure
       ),
       map(({ error }) => UiActions.setError({ error }))
     )

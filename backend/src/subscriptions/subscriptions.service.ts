@@ -2,8 +2,12 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { PrismaService } from '../database/prisma.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
-import { Subscription, Prisma } from '@prisma/client';
+import { AddParticipantDto } from './dto/add-participant.dto';
+import { Subscription, Prisma, ShareType } from '@prisma/client';
 import { SubscriptionParticipantsService } from './subscription-participants.service';
+import { ShareCalculationService } from './share-calculation.service';
+import { ParticipantValidationService } from './participant-validation.service';
+import { SubscriptionAuditService } from './subscription-audit.service';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
@@ -11,6 +15,9 @@ export class SubscriptionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly participantsService: SubscriptionParticipantsService,
+    private readonly shareCalculationService: ShareCalculationService,
+    private readonly participantValidationService: ParticipantValidationService,
+    private readonly subscriptionAuditService: SubscriptionAuditService,
   ) {}
 
   async create(createSubscriptionDto: CreateSubscriptionDto, ownerId: string): Promise<Subscription> {
@@ -205,6 +212,141 @@ export class SubscriptionsService {
         },
       },
       orderBy: { created_at: 'desc' },
+    });
+  }
+
+  async addParticipant(
+    subscriptionId: string,
+    addParticipantDto: AddParticipantDto,
+    adminUserId: string,
+  ): Promise<Subscription> {
+    // Validate the subscription exists and user has permission (already handled by controller guards)
+    const subscription = await this.findOne(subscriptionId);
+    
+    if (!subscription) {
+      throw new NotFoundException('Subscription not found');
+    }
+
+    // Only subscription owner can add participants (admin check is in controller)
+    if (subscription.owner_id !== adminUserId) {
+      throw new ForbiddenException('You can only add participants to subscriptions you own');
+    }
+
+    // Validate the add participant request
+    await this.participantValidationService.validateAddParticipantDto(
+      subscriptionId,
+      addParticipantDto,
+    );
+
+    // Validate share balance if custom share
+    await this.participantValidationService.validateShareBalance(
+      subscriptionId,
+      addParticipantDto,
+    );
+
+    // Add participant in a transaction with increased timeout
+    return this.prisma.$transaction(async (tx) => {
+      // Create the new participant
+      const newParticipant = await tx.subscriptionParticipant.create({
+        data: {
+          subscription_id: subscriptionId,
+          user_id: addParticipantDto.user_id,
+          share_type: addParticipantDto.share_type,
+          share_value: addParticipantDto.share_value ? new Decimal(addParticipantDto.share_value) : null,
+          is_active: true,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Get existing participants to check if we need to recalculate shares
+      const existingParticipants = await tx.subscriptionParticipant.findMany({
+        where: {
+          subscription_id: subscriptionId,
+          is_active: true,
+        },
+      });
+
+      const hasEqualShareParticipants = existingParticipants.some(
+        p => p.share_type === 'EQUAL' || addParticipantDto.share_type === 'EQUAL',
+      );
+
+      // Recalculate equal shares directly in the transaction if needed
+      if (hasEqualShareParticipants) {
+        const allActiveParticipants = await tx.subscriptionParticipant.findMany({
+          where: {
+            subscription_id: subscriptionId,
+            is_active: true,
+          },
+        });
+
+        // Get subscription total amount
+        const subscription = await tx.subscription.findUnique({
+          where: { id: subscriptionId },
+        });
+
+        if (subscription && allActiveParticipants.length > 0) {
+          const equalShareAmount = subscription.total_amount.div(allActiveParticipants.length);
+
+          // Update all participants with EQUAL share type
+          await tx.subscriptionParticipant.updateMany({
+            where: {
+              subscription_id: subscriptionId,
+              share_type: ShareType.EQUAL,
+              is_active: true,
+            },
+            data: {
+              share_value: equalShareAmount,
+            },
+          });
+        }
+      }
+
+      return newParticipant;
+    }, {
+      timeout: 10000, // Increase timeout to 10 seconds
+    }).then(async (newParticipant) => {
+      // Perform audit logging outside the transaction
+      await this.subscriptionAuditService.logParticipantAddition(
+        subscriptionId,
+        newParticipant.id,
+        adminUserId,
+        addParticipantDto,
+      );
+
+      // Log share recalculation if it occurred
+      const existingParticipants = await this.prisma.subscriptionParticipant.findMany({
+        where: {
+          subscription_id: subscriptionId,
+          is_active: true,
+        },
+      });
+
+      const hasEqualShareParticipants = existingParticipants.some(
+        p => p.share_type === 'EQUAL' || addParticipantDto.share_type === 'EQUAL',
+      );
+
+      if (hasEqualShareParticipants) {
+        await this.subscriptionAuditService.logShareRecalculation(
+          subscriptionId,
+          adminUserId,
+          'New participant added with equal share type',
+        );
+      }
+
+      // Return the updated subscription with all participants
+      const updatedSubscription = await this.findOne(subscriptionId);
+      if (!updatedSubscription) {
+        throw new NotFoundException('Subscription not found after participant addition');
+      }
+      return updatedSubscription;
     });
   }
 }

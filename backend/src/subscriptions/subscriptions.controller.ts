@@ -13,6 +13,7 @@ import {
 import { SubscriptionsService } from './subscriptions.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { AddParticipantDto } from './dto/add-participant.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -69,5 +70,16 @@ export class SubscriptionsController {
   @Roles(Role.ADMIN)
   remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
     return this.subscriptionsService.remove(id, req.user.id);
+  }
+
+  @Post(':id/participants')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  addParticipant(
+    @Param('id', ParseUUIDPipe) subscriptionId: string,
+    @Body() addParticipantDto: AddParticipantDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.subscriptionsService.addParticipant(subscriptionId, addParticipantDto, req.user.id);
   }
 }

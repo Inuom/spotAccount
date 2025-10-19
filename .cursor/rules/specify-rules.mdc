@@ -1,4 +1,4 @@
-﻿# spotAccount Development Guidelines
+# spotAccount Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2025-10-18
 
@@ -8,6 +8,10 @@ Auto-generated from all feature plans. Last updated: 2025-10-18
 - SQLite with file storage for data persistence (001-shared-subscription-spec)
 - TypeScript/Node.js 18+, Angular 17+, NestJS 10+ + NestJS, Angular, NgRx, Prisma ORM, PostgreSQL 14+ (001-shared-subscription-spec)
 - PostgreSQL database with Prisma ORM for type-safe access (001-shared-subscription-spec)
+- TypeScript 5.x (Angular 17+ frontend, NestJS backend) + Angular 17+ with NgRx, NestJS with Prisma ORM, PostgreSQL (001-shared-subscription-spec)
+- PostgreSQL database with Prisma ORM for data persistence (001-shared-subscription-spec)
+- TypeScript 5.0+, Node.js 18+ (LTS), Angular 17+ + NestJS, Prisma ORM, PostgreSQL, NgRx, Angular Material (001-shared-subscription-spec)
+- PostgreSQL with Prisma ORM for data persistence and migrations (001-shared-subscription-spec)
 
 ## Project Structure
 ```
@@ -23,9 +27,9 @@ npm test; npm run lint
 Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions
 
 ## Recent Changes
+- 001-shared-subscription-spec: Added TypeScript 5.0+, Node.js 18+ (LTS), Angular 17+ + NestJS, Prisma ORM, PostgreSQL, NgRx, Angular Material
+- 001-shared-subscription-spec: Added TypeScript 5.x (Angular 17+ frontend, NestJS backend) + Angular 17+ with NgRx, NestJS with Prisma ORM, PostgreSQL
 - 001-shared-subscription-spec: Added TypeScript/Node.js 18+, Angular 17+, NestJS 10+ + NestJS, Angular, NgRx, Prisma ORM, PostgreSQL 14+
-- 001-shared-subscription-spec: Added TypeScript/Node.js 18+, Angular 17+, NestJS 10+ + NestJS, Angular, NgRx, Prisma ORM, PostgreSQL 14+
-- 001-shared-subscription-spec: Added Node.js 18+ (backend), TypeScript 5+ (frontend) + NestJS (backend), Angular 17+ (frontend), NgRx (state management), Prisma (ORM), SQLite (database)
 
 ## Code Style
 Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions

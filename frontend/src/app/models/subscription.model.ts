@@ -40,6 +40,12 @@ export interface CreateSubscriptionParticipantDto {
   share_value?: number;
 }
 
+export interface AddParticipantDto {
+  user_id: string;
+  share_type: 'EQUAL' | 'CUSTOM';
+  share_value?: number;
+}
+
 export interface CreateSubscriptionDto {
   title: string;
   total_amount: number;

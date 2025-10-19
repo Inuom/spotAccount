@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Subscription, CreateSubscriptionDto, UpdateSubscriptionDto } from '../models/subscription.model';
+import { Subscription, CreateSubscriptionDto, UpdateSubscriptionDto, AddParticipantDto } from '../models/subscription.model';
 import { Charge } from '../models/charge.model';
 
 @Injectable({
@@ -41,6 +41,10 @@ export class SubscriptionService {
       `charges/subscriptions/${subscriptionId}/generate?until=${until}`,
       {}
     );
+  }
+
+  addParticipant(subscriptionId: string, participant: AddParticipantDto): Observable<Subscription> {
+    return this.apiService.post<Subscription>(`${this.endpoint}/${subscriptionId}/participants`, participant);
   }
 }
 

@@ -157,6 +157,28 @@ export const subscriptionsReducer = createReducer(
     loading: false,
     error,
   })),
+
+  // Add Participant
+  on(SubscriptionsActions.addParticipant, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(SubscriptionsActions.addParticipantSuccess, (state, { subscription }) =>
+    subscriptionsAdapter.updateOne(
+      { id: subscription.id, changes: subscription },
+      {
+        ...state,
+        loading: false,
+        error: null,
+      }
+    )
+  ),
+  on(SubscriptionsActions.addParticipantFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
   
   // Clear Error
   on(SubscriptionsActions.clearSubscriptionsError, (state) => ({
