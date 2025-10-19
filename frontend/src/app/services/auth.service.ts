@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
+import { User } from '../models/user.model';
 
 export interface LoginDto {
   email: string;
@@ -9,13 +10,7 @@ export interface LoginDto {
 
 export interface AuthResponse {
   access_token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-    is_active: boolean;
-  };
+  user: User;
 }
 
 export interface UpdatePasswordDto {

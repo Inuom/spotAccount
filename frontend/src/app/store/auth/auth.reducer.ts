@@ -1,8 +1,9 @@
 import { createReducer, on } from '@ngrx/store';
 import * as AuthActions from './auth.actions';
+import { User } from '../../models/user.model';
 
 export interface AuthState {
-  user: { id: string; email: string; role: string } | null;
+  user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
