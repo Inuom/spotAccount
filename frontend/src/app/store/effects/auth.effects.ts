@@ -20,9 +20,13 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.login),
       switchMap(({ email, password }) =>
-        this.authService.login(email, password).pipe(
-          map((response) => AuthActions.loginSuccess({ user: response.user, token: response.token })),
-          catchError((error) => of(AuthActions.loginFailure({ error: error.message })))
+        this.authService.login({ email, password }).pipe(
+          map((response) => AuthActions.loginSuccess({ user: response.user, token: response.access_token })),
+          catchError((error) => {
+            console.error('Login error:', error);
+            const errorMessage = error?.error?.message || error?.message || 'Login failed. Please check your credentials.';
+            return of(AuthActions.loginFailure({ error: errorMessage }));
+          })
         )
       )
     )
@@ -34,9 +38,13 @@ export class AuthEffects {
       tap(({ user, token }) => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
-        this.router.navigate(['/dashboard']);
-      }),
-      map(() => UiActions.clearError())
+        // Navigate based on user role
+        if (user.role === 'ADMIN') {
+          this.router.navigate(['/admin/dashboard']);
+        } else {
+          this.router.navigate(['/user/dashboard']);
+        }
+      })
     ), { dispatch: false }
   );
 
@@ -54,8 +62,7 @@ export class AuthEffects {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         this.router.navigate(['/login']);
-      }),
-      map(() => UiActions.clearError())
+      })
     ), { dispatch: false }
   );
 
@@ -75,6 +82,55 @@ export class AuthEffects {
           return of(AuthActions.logout());
         }
       })
+    )
+  );
+
+  updatePassword$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.updatePassword),
+      switchMap(({ currentPassword, newPassword }) =>
+        this.authService.updatePassword({ currentPassword, newPassword }).pipe(
+          map((response) => AuthActions.updatePasswordSuccess({ message: response.message })),
+          catchError((error) => of(AuthActions.updatePasswordFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+
+  updatePasswordSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.updatePasswordSuccess),
+      tap(() => {
+        // Show success message
+        alert('Password updated successfully!');
+      }),
+      map(() => UiActions.clearError())
+    )
+  );
+
+  updatePasswordFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.updatePasswordFailure),
+      map(({ error }) => UiActions.setError({ error }))
+    )
+  );
+
+  reAuthenticate$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.reAuthenticate),
+      switchMap(({ password }) =>
+        this.authService.reAuthenticate(password).pipe(
+          map(() => AuthActions.reAuthenticateSuccess()),
+          catchError((error) => of(AuthActions.reAuthenticateFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+
+  reAuthenticateFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.reAuthenticateFailure),
+      map(({ error }) => UiActions.setError({ error }))
     )
   );
 }

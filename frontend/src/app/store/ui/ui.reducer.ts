@@ -34,5 +34,9 @@ export const uiReducer = createReducer(
     error: null,
     successMessage: null,
   })),
+  on(UiActions.clearError, (state) => ({
+    ...state,
+    error: null,
+  })),
 );
 

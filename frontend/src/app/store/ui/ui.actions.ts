@@ -17,3 +17,5 @@ export const setSuccess = createAction(
 
 export const clearMessages = createAction('[UI] Clear Messages');
 
+export const clearError = createAction('[UI] Clear Error');
+

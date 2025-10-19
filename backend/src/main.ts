@@ -8,11 +8,53 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   // Enable CORS with configuration
+  const corsOrigins = process.env.CORS_ORIGIN 
+    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+    : [
+        'http://localhost:4200', 
+        'http://127.0.0.1:4200',
+        'http://localhost:3000' // For development testing
+      ];
+  
+  console.log('CORS allowed origins:', corsOrigins);
+  
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || ['http://localhost:4200'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl requests, or same-origin requests)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // Check if origin is in allowed list
+      if (corsOrigins.includes(origin)) {
+        console.log('CORS allowed origin:', origin);
+        return callback(null, true);
+      }
+      
+      // For development, be more permissive
+      if (process.env.NODE_ENV !== 'production') {
+        // Allow localhost with any port in development
+        if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+          console.log('CORS development allowed origin:', origin);
+          return callback(null, true);
+        }
+      }
+      
+      console.error('CORS blocked origin:', origin);
+      callback(new Error(`Origin ${origin} not allowed by CORS`), false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'Cache-Control',
+      'Pragma',
+      'Expires',
+      'X-Requested-With'
+    ],
+    optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+    preflightContinue: false,
   });
   
   // Global prefix for all routes

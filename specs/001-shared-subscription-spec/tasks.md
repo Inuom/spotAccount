@@ -125,21 +125,21 @@
 
 ### T073-T080: Backend Implementation
 
-- [ ] T073 [P] [US5] Implement password update endpoint in backend/src/auth/auth.controller.ts
-- [ ] T074 [P] [US5] Create password update DTOs and validation in backend/src/auth/dto/update-password.dto.ts
-- [ ] T075 [P] [US5] Implement password verification service in backend/src/auth/password-verification.service.ts
-- [ ] T076 [P] [US5] Implement password update service in backend/src/auth/password-update.service.ts
-- [ ] T077 [P] [US5] Create database seed script for initial admin user in backend/prisma/seed.ts
-- [ ] T078 [P] [US5] Implement password complexity validation in backend/src/auth/password-validation.service.ts
-- [ ] T079 [P] [US5] Add password update to auth module in backend/src/auth/auth.module.ts
-- [ ] T080 [P] [US5] Implement re-authentication requirement in backend/src/auth/auth.service.ts
+- [X] T073 [P] [US5] Implement password update endpoint in backend/src/auth/auth.controller.ts
+- [X] T074 [P] [US5] Create password update DTOs and validation in backend/src/auth/dto/update-password.dto.ts
+- [X] T075 [P] [US5] Implement password verification service in backend/src/auth/password-verification.service.ts
+- [X] T076 [P] [US5] Implement password update service in backend/src/auth/password-update.service.ts
+- [X] T077 [P] [US5] Create database seed script for initial admin user in backend/prisma/seed.ts
+- [X] T078 [P] [US5] Implement password complexity validation in backend/src/auth/password-validation.service.ts
+- [X] T079 [P] [US5] Add password update to auth module in backend/src/auth/auth.module.ts
+- [X] T080 [P] [US5] Implement re-authentication requirement in backend/src/auth/auth.service.ts
 
 ### T081-T084: Frontend Implementation
 
-- [ ] T081 [P] [US5] Create password update API service in frontend/src/app/services/auth.service.ts
-- [ ] T082 [P] [US5] Create password update component in frontend/src/app/components/password-update/
-- [ ] T083 [P] [US5] Add password update to user settings in frontend/src/app/pages/user/settings/
-- [ ] T084 [P] [US5] Implement password update NgRx actions and effects in frontend/src/app/store/auth/
+- [X] T081 [P] [US5] Create password update API service in frontend/src/app/services/auth.service.ts
+- [X] T082 [P] [US5] Create password update component in frontend/src/app/components/password-update/
+- [X] T083 [P] [US5] Add password update to user settings in frontend/src/app/pages/user/settings/
+- [X] T084 [P] [US5] Implement password update NgRx actions and effects in frontend/src/app/store/auth/
 
 ## Phase 6: User Story 3 - User Payment Management (P2)
 
