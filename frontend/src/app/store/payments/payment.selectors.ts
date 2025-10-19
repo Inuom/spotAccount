@@ -1,6 +1,13 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { Payment } from '../../models/payment.model';
-import { PaymentsState, selectAllPayments, selectPaymentEntities, selectPaymentIds, selectPaymentsTotal } from './payment.reducer';
+import { PaymentsState, paymentsAdapter } from './payment.reducer';
+
+const {
+  selectIds,
+  selectEntities,
+  selectAll: selectAllPayments,
+  selectTotal: selectPaymentsTotal,
+} = paymentsAdapter.getSelectors();
 
 export const selectPaymentsState = createFeatureSelector<PaymentsState>('payments');
 
@@ -11,12 +18,12 @@ export const selectAllPaymentsSelector = createSelector(
 
 export const selectPaymentEntitiesSelector = createSelector(
   selectPaymentsState,
-  selectPaymentEntities
+  selectEntities
 );
 
 export const selectPaymentIdsSelector = createSelector(
   selectPaymentsState,
-  selectPaymentIds
+  selectIds
 );
 
 export const selectPaymentsTotalSelector = createSelector(

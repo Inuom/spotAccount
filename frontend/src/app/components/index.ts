@@ -8,3 +8,10 @@ export * from './card/card.component';
 // Smart/Dumb components
 export * from './smart';
 export * from './dumb';
+
+// Payment components
+export * from './payment-verification/payment-verification.component';
+export * from './payment-status/payment-status.component';
+export * from './payment-audit/payment-audit.component';
+export * from './payment-workflow/payment-workflow.component';
+export * from './payment-notification/payment-notification.component';

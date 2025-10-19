@@ -48,7 +48,7 @@ export class PaymentsService {
       amount: new Decimal(amount),
       currency: currency || 'EUR',
       scheduled_date: new Date(scheduled_date),
-      created_by: creatorId,
+      creator: { connect: { id: creatorId } },
       status: PaymentStatus.PENDING,
     });
   }

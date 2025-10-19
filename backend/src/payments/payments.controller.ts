@@ -46,9 +46,9 @@ export class PaymentsController {
 
   @Get()
   findAll(
+    @Request() req: AuthenticatedRequest,
     @Query('status') status?: PaymentStatus,
     @Query('user_id') user_id?: string,
-    @Request() req: AuthenticatedRequest,
   ) {
     // If user is not admin, only show their own payments
     const userId = req.user.role === 'ADMIN' ? user_id : req.user.id;

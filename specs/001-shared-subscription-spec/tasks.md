@@ -111,12 +111,12 @@
 
 - [X] T065 [P] [US2] Create Payment NgRx store in frontend/src/app/store/payments/
 - [X] T066 [P] [US2] Create Payment API service in frontend/src/app/services/payment.service.ts
-- [ ] T067 [P] [US2] Create Payment verification page in frontend/src/app/pages/admin/payments/
-- [ ] T068 [P] [US2] Create Payment verification component in frontend/src/app/components/payment-verification/
-- [ ] T069 [P] [US2] Create Payment status indicators in frontend/src/app/components/payment-status/
-- [ ] T070 [P] [US2] Create Payment audit log component in frontend/src/app/components/payment-audit/
-- [ ] T071 [P] [US2] Create Payment workflow component in frontend/src/app/components/payment-workflow/
-- [ ] T072 [P] [US2] Create Payment notification component in frontend/src/app/components/payment-notification/
+- [X] T067 [P] [US2] Create Payment verification page in frontend/src/app/pages/admin/payments/
+- [X] T068 [P] [US2] Create Payment verification component in frontend/src/app/components/payment-verification/
+- [X] T069 [P] [US2] Create Payment status indicators in frontend/src/app/components/payment-status/
+- [X] T070 [P] [US2] Create Payment audit log component in frontend/src/app/components/payment-audit/
+- [X] T071 [P] [US2] Create Payment workflow component in frontend/src/app/components/payment-workflow/
+- [X] T072 [P] [US2] Create Payment notification component in frontend/src/app/components/payment-notification/
 
 ## Phase 5: User Story 5 - Update User Password (P1)
 

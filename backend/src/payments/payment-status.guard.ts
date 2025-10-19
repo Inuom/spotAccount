@@ -4,7 +4,7 @@ import { PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class PaymentStatusGuard implements CanActivate {
-  constructor(private readonly paymentsRepository: PaymentsRepository) {}
+  constructor(public readonly paymentsRepository: PaymentsRepository) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

@@ -23,7 +23,7 @@ export interface Payment {
     amount_total: number;
     period_start: string;
     period_end: string;
-    subscription: {
+    subscription?: {
       id: string;
       title: string;
     };

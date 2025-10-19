@@ -10,5 +10,9 @@ export const ADMIN_ROUTES: Routes = [
     path: 'dashboard',
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
+  {
+    path: 'payments',
+    loadComponent: () => import('./payments/payments.component').then(m => m.PaymentsComponent)
+  },
 ];
 
