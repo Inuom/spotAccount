@@ -38,19 +38,20 @@
 - Svelte (less mature for complex applications)
 - Redux (more boilerplate, less Angular integration)
 
-### Database: SQLite with Prisma ORM
-**Decision**: Use SQLite with Prisma ORM for data persistence  
+### Database: PostgreSQL with Prisma ORM
+**Decision**: Use PostgreSQL with Prisma ORM for data persistence  
 **Rationale**:
-- Cost-effective for small scale (100 users)
-- Prisma provides type-safe database access
+- Production-ready database with ACID compliance for financial data integrity
+- Prisma provides excellent type-safe database access
 - Excellent migration support and schema management
-- File-based storage simplifies backup and deployment
-- ACID compliance for financial data integrity
+- Docker containerization for consistent development/production environments
+- AWS RDS PostgreSQL for managed production hosting with automated backups
+- Better concurrency support and scalability than SQLite
 
 **Alternatives considered**:
-- PostgreSQL on RDS (more expensive, overkill for scale)
-- MySQL (less type safety with Prisma)
-- MongoDB (NoSQL not suitable for financial transactions)
+- SQLite (limited concurrency, not suitable for production deployment)
+- MySQL (less type safety with Prisma, fewer advanced features)
+- MongoDB (NoSQL not suitable for financial transactions and relationships)
 
 ### Authentication: Username/Password with JWT
 **Decision**: Implement username/password authentication with JWT tokens  
@@ -240,13 +241,14 @@
 
 ## Data Management
 
-### Backup Strategy: File-Based Backups
-**Decision**: Implement regular SQLite database backups to S3  
+### Backup Strategy: AWS RDS Automated Backups
+**Decision**: Use AWS RDS PostgreSQL automated backups with point-in-time recovery  
 **Rationale**:
-- Simple to implement
-- Cost-effective storage
-- Easy to restore
-- Sufficient for small scale
+- Managed backup service with automated retention policies
+- Point-in-time recovery capabilities for maximum data protection
+- Cost-effective for production workloads
+- Reduces operational overhead
+- Built-in disaster recovery options
 
 ### Data Retention: 1-Year Minimum
 **Decision**: Retain financial data for minimum 1 year  
@@ -323,3 +325,26 @@
 - Component-level error handling (inconsistent, hard to manage)
 - Service-based error handling (less predictable, harder to test)
 - Mixed approach (inconsistent patterns, harder to maintain)
+
+## Frontend Architecture Evolution
+
+### Template Organization: Separate HTML Files
+**Decision**: Plan to separate component templates into dedicated HTML files instead of inline templates  
+**Rationale**:
+- Better maintainability and developer experience
+- Improved IDE support with syntax highlighting and IntelliSense
+- Easier collaboration and code review for template changes
+- Follows Angular best practices and community standards
+
+### Signals Migration Strategy
+**Decision**: Plan for future Angular signals migration after core functionality is stable  
+**Rationale**:
+- Current NgRx/Observables implementation is functional and stable
+- Signals migration represents a significant architectural change
+- Risk reduction: complete core features before major refactoring
+- Angular 18+ signals will provide better performance and developer experience when ready
+
+**Migration Timeline**:
+- Phase 1: Complete core functionality with current NgRx approach
+- Phase 2: Separate templates into HTML files for immediate improvement
+- Phase 3: Plan signals migration after system stabilization

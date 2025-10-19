@@ -1,253 +1,219 @@
 # Data Model: Shared Subscription Debt Manager
 
-**Date**: 2025-10-18  
+**Date**: 2025-01-22  
 **Feature**: 001-shared-subscription-spec  
-**Database**: SQLite with Prisma ORM
+**Database**: PostgreSQL with Prisma ORM
+
+## Entity Overview
+
+The system manages shared subscription debts through five core entities with clear relationships and state management:
+
+- **User**: System participants (administrators and users)
+- **Subscription**: Recurring shared expense configurations  
+- **SubscriptionParticipant**: Links users to subscriptions with share rules
+- **Charge**: Monthly billing instances generated from subscriptions
+- **ChargeShare**: Individual participant portions of each charge
+- **Payment**: User payments with verification workflow
 
 ## Entity Definitions
 
 ### User
-**Purpose**: Represents system users (administrators and participants)
+
+System users who can be administrators or regular users, with authentication and authorization capabilities.
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
-| id | UUID | Primary Key | Unique identifier |
-| email | String | Unique, Not Null | User's email address |
-| name | String | Not Null | User's display name |
-| password_hash | String | Not Null | Bcrypt hashed password |
-| role | Enum | Not Null | 'admin' or 'user' |
-| is_active | Boolean | Not Null, Default: true | Account status |
-| created_at | DateTime | Not Null | Account creation timestamp |
-| updated_at | DateTime | Not Null | Last update timestamp |
+| `id` | `String` (UUID) | Primary Key | Unique user identifier |
+| `email` | `String` | Unique, Required | User login identifier |
+| `name` | `String` | Required | Display name for user |
+| `password_hash` | `String` | Required | Bcrypt hashed password |
+| `role` | `Role` enum | Default: USER | ADMIN or USER role |
+| `is_active` | `Boolean` | Default: true | Account status flag |
+| `created_at` | `DateTime` | Auto-generated | Account creation timestamp |
+| `updated_at` | `DateTime` | Auto-updated | Last modification timestamp |
 
-**Validation Rules**:
-- Email must be valid format
-- Password must be minimum 8 characters with complexity
-- Role must be either 'admin' or 'user'
-- Name must be non-empty
-
-**State Transitions**:
-- New → Active (account creation)
-- Active → Inactive (account deactivation)
-- Inactive → Active (account reactivation)
+**Relationships**:
+- One-to-many `owned_subscriptions` (User owns Subscription)
+- One-to-many `subscription_participants` (User participates in Subscriptions)
+- One-to-many `charge_shares` (User has ChargeShares)
+- One-to-many `payments_made` (User makes Payments)
+- One-to-many `payments_created` (User creates Payments)
+- One-to-many `payments_verified` (User verifies Payments)
 
 ### Subscription
-**Purpose**: Represents recurring shared expense configurations
+
+Recurring shared expense configurations with billing schedule and participant management.
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
-| id | UUID | Primary Key | Unique identifier |
-| title | String | Not Null | Subscription name |
-| total_amount | Decimal | Not Null, > 0 | Monthly total amount |
-| billing_day | Integer | Not Null, 1-31 | Day of month for billing |
-| frequency | String | Not Null, Default: 'monthly' | Billing frequency |
-| owner_id | UUID | Foreign Key → User.id | Administrator who created |
-| start_date | Date | Not Null | Subscription start date |
-| end_date | Date | Nullable | Subscription end date |
-| is_active | Boolean | Not Null, Default: true | Subscription status |
-| created_at | DateTime | Not Null | Creation timestamp |
-| updated_at | DateTime | Not Null | Last update timestamp |
+| `id` | `String` (UUID) | Primary Key | Unique subscription identifier |
+| `title` | `String` | Required | Human-readable subscription name |
+| `total_amount` | `Decimal` | Required, > 0 | Monthly billing amount |
+| `billing_day` | `Int` | Required, Range: 1-31 | Day of month for billing |
+| `frequency` | `String` | Default: "monthly" | Billing frequency pattern |
+| `owner_id` | `String` (UUID) | Foreign Key → User.id | Administrative owner |
+| `start_date` | `DateTime` | Required | When billing begins |
+| `end_date` | `DateTime` | Optional | When billing ends (null = indefinite) |
+| `is_active` | `Boolean` | Default: true | Subscription status flag |
+| `created_at` | `DateTime` | Auto-generated | Subscription creation timestamp |
+| `updated_at` | `DateTime` | Auto-updated | Last modification timestamp |
 
-**Validation Rules**:
-- Title must be non-empty
-- Total amount must be positive
-- Billing day must be 1-31
-- Start date must be valid
-- End date must be after start date (if provided)
-
-**State Transitions**:
-- Draft → Active (subscription activation)
-- Active → Inactive (subscription deactivation)
-- Inactive → Active (subscription reactivation)
+**Relationships**:
+- Many-to-one `owner` (User owns Subscription)
+- One-to-many `participants` (SubscriptionParticipant belongs to Subscription)
+- One-to-many `charges` (Charge generated from Subscription)
 
 ### SubscriptionParticipant
-**Purpose**: Links users to subscriptions with their share configuration
+
+Links users to subscriptions with configurable share calculation rules.
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
-| id | UUID | Primary Key | Unique identifier |
-| subscription_id | UUID | Foreign Key → Subscription.id | Associated subscription |
-| user_id | UUID | Foreign Key → User.id | Participant user |
-| share_type | Enum | Not Null | 'equal' or 'custom' |
-| share_value | Decimal | Nullable | Custom share amount (if share_type = 'custom') |
-| is_active | Boolean | Not Null, Default: true | Participation status |
-| created_at | DateTime | Not Null | Creation timestamp |
-| updated_at | DateTime | Not Null | Last update timestamp |
+| `id` | `String` (UUID) | Primary Key | Unique participant record identifier |
+| `subscription_id` | `String` (UUID) | Foreign Key → Subscription.id | Associated subscription |
+| `user_id` | `String` (UUID) | Foreign Key → User.id | Participating user |
+| `share_type` | `ShareType` enum | Default: EQUAL | How share is calculated |
+| `share_value` | `Decimal` | Optional* | Custom share amount/percentage |
+| `is_active` | `Boolean` | Default: true | Participation status flag |
+| `created_at` | `DateTime` | Auto-generated | Participation creation timestamp |
+| `updated_at` | `DateTime` | Auto-updated | Last modification timestamp |
 
-**Validation Rules**:
-- User must be active
-- Subscription must be active
-- Share value must be positive (if custom)
-- Share values must sum to subscription total
+**Constraints**:
+- Unique constraint on `(subscription_id, user_id)`
+- `share_value` required when `share_type = CUSTOM`
 
-**State Transitions**:
-- Pending → Active (participation confirmed)
-- Active → Inactive (participation ended)
-- Inactive → Active (participation resumed)
+**Relationships**:
+- Many-to-one `subscription` (SubscriptionParticipant belongs to Subscription)
+- Many-to-one `user` (SubscriptionParticipant belongs to User)
 
 ### Charge
-**Purpose**: Represents monthly instances of subscription billing
+
+Monthly billing instances generated from active subscriptions according to their schedule.
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
-| id | UUID | Primary Key | Unique identifier |
-| subscription_id | UUID | Foreign Key → Subscription.id | Associated subscription |
-| period_start | Date | Not Null | Billing period start |
-| period_end | Date | Not Null | Billing period end |
-| amount_total | Decimal | Not Null, > 0 | Total charge amount |
-| status | Enum | Not Null, Default: 'pending' | 'pending', 'generated', 'cancelled' |
-| created_at | DateTime | Not Null | Creation timestamp |
-| updated_at | DateTime | Not Null | Last update timestamp |
+| `id` | `String` (UUID) | Primary Key | Unique charge identifier |
+| `subscription_id` | `String` (UUID) | Foreign Key → Subscription.id | Source subscription |
+| `period_start` | `DateTime` | Required | Billing period start date |
+| `period_end` | `DateTime` | Required | Billing period end date |
+| `amount_total` | `Decimal` | Required, > 0 | Total charge amount for period |
+| `status` | `ChargeStatus` enum | Default: PENDING | Charge processing status |
+| `created_at` | `DateTime` | Auto-generated | Charge creation timestamp |
+| `updated_at` | `DateTime` | Auto-updated | Last modification timestamp |
 
-**Validation Rules**:
-- Period start must be before period end
-- Amount must be positive
-- Must not overlap with existing charges for same subscription
-
-**State Transitions**:
-- Pending → Generated (charge generation)
-- Generated → Cancelled (charge cancellation)
-- Cancelled → Generated (charge reactivation)
+**Relationships**:
+- Many-to-one `subscription` (Charge belongs to Subscription)
+- One-to-many `shares` (ChargeShare belongs to Charge)
+- One-to-many `payments` (Payment references Charge)
 
 ### ChargeShare
-**Purpose**: Represents individual participant's portion of a charge
+
+Individual participant portions automatically calculated when charges are generated.
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
-| id | UUID | Primary Key | Unique identifier |
-| charge_id | UUID | Foreign Key → Charge.id | Associated charge |
-| user_id | UUID | Foreign Key → User.id | Participant user |
-| amount_due | Decimal | Not Null, ≥ 0 | Amount owed by participant |
-| amount_paid | Decimal | Not Null, Default: 0, ≥ 0 | Amount paid by participant |
-| status | Enum | Not Null, Default: 'open' | 'open', 'settled' |
-| created_at | DateTime | Not Null | Creation timestamp |
-| updated_at | DateTime | Not Null | Last update timestamp |
+| `id` | `String` (UUID) | Primary Key | Unique share identifier |
+| `charge_id` | `String` (UUID) | Foreign Key → Charge.id | Associated charge |
+| `user_id` | `String` (UUID) | Foreign Key → User.id | Share owner |
+| `amount_due` | `Decimal` | Required, ≥ 0 | Calculated share amount |
+| `amount_paid` | `Decimal` | Default: 0, ≥ 0 | Total payments applied |
+| `status` | `ShareStatus` enum | Default: OPEN | Share settlement status |
+| `created_at` | `DateTime` | Auto-generated | Share creation timestamp |
+| `updated_at` | `DateTime` | Auto-updated | Last modification timestamp |
 
-**Validation Rules**:
-- Amount due must be non-negative
-- Amount paid must be non-negative
-- Amount paid cannot exceed amount due
-- Sum of shares must equal charge total
+**Business Rules**:
+- `amount_due` calculated based on SubscriptionParticipant share rules
+- `status` automatically computed: OPEN if `amount_due > amount_paid`, SETTLED otherwise
+- Share calculations must ensure sum of shares equals `Charge.amount_total`
 
-**State Transitions**:
-- Open → Settled (payment verification)
-- Settled → Open (payment reversal)
+**Relationships**:
+- Many-to-one `charge` (ChargeShare belongs to Charge)
+- Many-to-one `user` (ChargeShare belongs to User)
 
 ### Payment
-**Purpose**: Represents user payments and administrator-created payments
+
+User payment records with verification workflow managed by administrators.
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
-| id | UUID | Primary Key | Unique identifier |
-| user_id | UUID | Foreign Key → User.id | Paying user |
-| charge_id | UUID | Foreign Key → Charge.id, Nullable | Associated charge (if applicable) |
-| amount | Decimal | Not Null, > 0 | Payment amount |
-| currency | String | Not Null, Default: 'EUR' | Payment currency |
-| scheduled_date | Date | Not Null | Scheduled payment date |
-| created_by | UUID | Foreign Key → User.id | User who created payment |
-| status | Enum | Not Null, Default: 'pending' | 'pending', 'verified', 'cancelled' |
-| verification_reference | String | Nullable | Bank reference or verification note |
-| verified_at | DateTime | Nullable | Verification timestamp |
-| verified_by | UUID | Foreign Key → User.id, Nullable | Administrator who verified |
-| created_at | DateTime | Not Null | Creation timestamp |
-| updated_at | DateTime | Not Null | Last update timestamp |
+| `id` | `String` (UUID) | Primary Key | Unique payment identifier |
+| `user_id` | `String` (UUID) | Foreign Key → User.id | Payment maker |
+| `charge_id` | `String` (UUID) | Foreign Key → Charge.id | Optional charge reference |
+| `amount` | `Decimal` | Required, > 0 | Payment amount |
+| `currency` | `String` | Default: "EUR" | Currency code |
+| `scheduled_date` | `DateTime` | Required | When payment is scheduled |
+| `created_by` | `String` (UUID) | Foreign Key → User.id | Who created this payment |
+| `status` | `PaymentStatus` enum | Default: PENDING | Payment verification status |
+| `verification_reference` | `String` | Optional | Admin verification note |
+| `verified_at` | `DateTime` | Optional | Verification timestamp |
+| `verified_by` | `String` (UUID) | Foreign Key → User.id | Who verified payment |
+| `created_at` | `DateTime` | Auto-generated | Payment creation timestamp |
+| `updated_at` | `DateTime` | Auto-updated | Last modification timestamp |
 
-**Validation Rules**:
-- Amount must be positive
-- Currency must be valid ISO code
-- Scheduled date cannot be in the past
-- Verification reference required for verified payments
-- Verified payments cannot be modified
+**Business Rules**:
+- `created_by` can be the same as `user_id` (user creates own payment)
+- `verified_by` must be different from `user_id` (admin verification)
+- Once `status = VERIFIED`, record becomes immutable (no updates allowed)
 
-**State Transitions**:
-- Pending → Verified (payment verification)
-- Pending → Cancelled (payment cancellation)
-- Verified → Cancelled (payment reversal - creates new reversing entry)
+**Relationships**:
+- Many-to-one `user` (Payment made by User)
+- Many-to-one `charge` (Payment references Charge - optional)
+- Many-to-one `creator` (Payment created by User)
+- Many-to-one `verifier` (Payment verified by User)
 
-## Relationships
+## Enumerations
 
-### Primary Relationships
-- **User** → **Subscription** (1:N) - Users can own multiple subscriptions
-- **Subscription** → **SubscriptionParticipant** (1:N) - Subscriptions have multiple participants
-- **User** → **SubscriptionParticipant** (1:N) - Users can participate in multiple subscriptions
-- **Subscription** → **Charge** (1:N) - Subscriptions generate multiple charges
-- **Charge** → **ChargeShare** (1:N) - Charges have multiple shares
-- **User** → **ChargeShare** (1:N) - Users have multiple charge shares
-- **User** → **Payment** (1:N) - Users can make multiple payments
-- **Charge** → **Payment** (1:N) - Charges can have multiple payments
-- **User** → **Payment** (created_by, verified_by) - Users create and verify payments
+### Role
+- `ADMIN`: Full system access, payment verification, user management
+- `USER`: Limited access, own payments and balances only
 
-### Business Rules
-1. **Subscription Ownership**: Only administrators can create subscriptions
-2. **Participation**: Users can only participate in active subscriptions
-3. **Charge Generation**: Charges are generated monthly based on subscription schedule
-4. **Share Calculation**: Shares are calculated based on participant configuration
-5. **Payment Verification**: Only administrators can verify payments
-6. **Data Integrity**: Verified payments cannot be modified or deleted
-7. **Concurrent Access**: Last-write-wins semantics for concurrent modifications
+### ShareType  
+- `EQUAL`: Equal division based on active participants count
+- `CUSTOM`: Custom amount specified in `SubscriptionParticipant.share_value`
 
-## Indexes
+### ChargeStatus
+- `PENDING`: Charge created but shares not yet calculated
+- `GENERATED`: Charge with calculated shares ready for payments
+- `CANCELLED`: Charge cancelled, no payments accepted
 
-### Performance Indexes
-- `idx_user_email` on User.email (unique)
-- `idx_subscription_owner` on Subscription.owner_id
-- `idx_subscription_participant_user` on SubscriptionParticipant.user_id
-- `idx_subscription_participant_subscription` on SubscriptionParticipant.subscription_id
-- `idx_charge_subscription` on Charge.subscription_id
-- `idx_charge_share_user` on ChargeShare.user_id
-- `idx_charge_share_charge` on ChargeShare.charge_id
-- `idx_payment_user` on Payment.user_id
-- `idx_payment_charge` on Payment.charge_id
-- `idx_payment_status` on Payment.status
+### ShareStatus
+- `OPEN`: Amount due exceeds amount paid
+- `SETTLED`: Amount due equals or is less than amount paid
 
-### Composite Indexes
-- `idx_charge_period` on Charge(subscription_id, period_start, period_end)
-- `idx_payment_user_status` on Payment(user_id, status)
-- `idx_charge_share_user_status` on ChargeShare(user_id, status)
+### PaymentStatus
+- `PENDING`: Payment created but not yet verified by administrator
+- `VERIFIED`: Payment verified, immutable, affects charge share balances
+- `CANCELLED`: Payment cancelled, does not affect balances
 
-## Data Validation
+## Business Rules & Validation
 
-### Application-Level Validation
-- Email format validation
-- Password complexity requirements
-- Monetary amount precision (2 decimal places)
-- Date range validation
-- Enum value validation
-- Foreign key constraint validation
+### Data Integrity
+1. **Monetary Amounts**: All monetary fields must be positive decimals with appropriate precision
+2. **Date Validation**: `period_start < period_end`, `scheduled_date` can be future dates
+3. **Share Calculation**: Sum of all `ChargeShare.amount_due` must equal `Charge.amount_total`
+4. **User Access**: Users can only modify their own pending payments; admins can verify any payment
 
-### Database-Level Constraints
-- Primary key constraints
-- Foreign key constraints
-- Unique constraints
-- Check constraints for positive amounts
-- Check constraints for valid date ranges
-- Check constraints for enum values
+### State Transitions
+1. **Payment Status**: `PENDING` → `VERIFIED` or `CANCELLED` (one-way transition)
+2. **Charge Status**: `PENDING` → `GENERATED` → `CANCELLED` (can skip to cancelled)
+3. **Share Status**: Automatically computed based on payment verification
 
-## Audit Trail
+### Security Constraints
+1. **Password Storage**: Must use bcrypt with configurable salt rounds
+2. **Financial Data**: All monetary operations must be logged with user context
+3. **Data Retention**: Financial records retained minimum 1 year per requirements
 
-### Audit Fields
-All entities include:
-- `created_at` - Record creation timestamp
-- `updated_at` - Last modification timestamp
+## Indexes & Performance
 
-### Audit Logging
-Critical actions are logged:
-- User authentication attempts
-- Payment verification actions
-- Subscription modifications
-- User role changes
-- Data deletion attempts
+### Required Indexes
+- `users.email` - Unique index for authentication
+- `subscription_participants(subscription_id, user_id)` - Composite unique index
+- `charges.subscription_id` - Foreign key index for charge queries
+- `charge_shares.user_id` - Index for user balance calculations
+- `payments.user_id` - Index for user payment history
+- `payments.status` - Index for admin verification queue
 
-## Data Migration Strategy
-
-### Prisma Migrations
-- Schema changes via Prisma migrations
-- Version-controlled database evolution
-- Rollback support for failed migrations
-- Data transformation scripts for complex changes
-
-### Backup and Recovery
-- Daily SQLite database backups
-- S3 storage for backup retention
-- Point-in-time recovery capability
-- Data export for compliance requirements
+### Query Patterns
+- User balance calculations: Join `charge_shares` with verified `payments`
+- Subscription management: Query `subscriptions` with `participants`
+- Admin dashboard: Aggregate queries across all entities with date filtering

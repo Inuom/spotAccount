@@ -4,7 +4,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 import { SubscriptionService } from '../../services/subscription.service';
-import * as SubscriptionActions from '../subscriptions/subscription.actions';
+import * as SubscriptionsActions from '../subscriptions/subscriptions.actions';
 import * as UiActions from '../ui/ui.actions';
 
 @Injectable()
@@ -16,11 +16,35 @@ export class SubscriptionEffects {
 
   loadSubscriptions$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(SubscriptionActions.loadSubscriptions),
+      ofType(SubscriptionsActions.loadSubscriptions),
       switchMap(() =>
         this.subscriptionService.getSubscriptions().pipe(
-          map((subscriptions) => SubscriptionActions.loadSubscriptionsSuccess({ subscriptions })),
-          catchError((error) => of(SubscriptionActions.loadSubscriptionsFailure({ error: error.message })))
+          map((subscriptions) => SubscriptionsActions.loadSubscriptionsSuccess({ subscriptions })),
+          catchError((error) => of(SubscriptionsActions.loadSubscriptionsFailure({ error: error.message || 'Failed to load subscriptions' })))
+        )
+      )
+    )
+  );
+
+  loadMySubscriptions$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(SubscriptionsActions.loadMySubscriptions),
+      switchMap(() =>
+        this.subscriptionService.getMySubscriptions().pipe(
+          map((subscriptions) => SubscriptionsActions.loadMySubscriptionsSuccess({ subscriptions })),
+          catchError((error) => of(SubscriptionsActions.loadMySubscriptionsFailure({ error: error.message || 'Failed to load subscriptions' })))
+        )
+      )
+    )
+  );
+
+  loadSubscription$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(SubscriptionsActions.loadSubscription),
+      switchMap(({ id }) =>
+        this.subscriptionService.getSubscriptionById(id).pipe(
+          map((subscription) => SubscriptionsActions.loadSubscriptionSuccess({ subscription })),
+          catchError((error) => of(SubscriptionsActions.loadSubscriptionFailure({ error: error.message || 'Failed to load subscription' })))
         )
       )
     )
@@ -28,11 +52,11 @@ export class SubscriptionEffects {
 
   createSubscription$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(SubscriptionActions.createSubscription),
+      ofType(SubscriptionsActions.createSubscription),
       switchMap(({ subscription }) =>
         this.subscriptionService.createSubscription(subscription).pipe(
-          map((newSubscription) => SubscriptionActions.createSubscriptionSuccess({ subscription: newSubscription })),
-          catchError((error) => of(SubscriptionActions.createSubscriptionFailure({ error: error.message })))
+          map((newSubscription) => SubscriptionsActions.createSubscriptionSuccess({ subscription: newSubscription })),
+          catchError((error) => of(SubscriptionsActions.createSubscriptionFailure({ error: error.message || 'Failed to create subscription' })))
         )
       )
     )
@@ -40,11 +64,11 @@ export class SubscriptionEffects {
 
   updateSubscription$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(SubscriptionActions.updateSubscription),
+      ofType(SubscriptionsActions.updateSubscription),
       switchMap(({ id, subscription }) =>
         this.subscriptionService.updateSubscription(id, subscription).pipe(
-          map((updatedSubscription) => SubscriptionActions.updateSubscriptionSuccess({ subscription: updatedSubscription })),
-          catchError((error) => of(SubscriptionActions.updateSubscriptionFailure({ error: error.message })))
+          map((updatedSubscription) => SubscriptionsActions.updateSubscriptionSuccess({ subscription: updatedSubscription })),
+          catchError((error) => of(SubscriptionsActions.updateSubscriptionFailure({ error: error.message || 'Failed to update subscription' })))
         )
       )
     )
@@ -52,40 +76,39 @@ export class SubscriptionEffects {
 
   deleteSubscription$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(SubscriptionActions.deleteSubscription),
+      ofType(SubscriptionsActions.deleteSubscription),
       switchMap(({ id }) =>
         this.subscriptionService.deleteSubscription(id).pipe(
-          map(() => SubscriptionActions.deleteSubscriptionSuccess({ id })),
-          catchError((error) => of(SubscriptionActions.deleteSubscriptionFailure({ error: error.message })))
+          map(() => SubscriptionsActions.deleteSubscriptionSuccess({ id })),
+          catchError((error) => of(SubscriptionsActions.deleteSubscriptionFailure({ error: error.message || 'Failed to delete subscription' })))
         )
       )
     )
   );
 
-  loadSubscriptionsFailure$ = createEffect(() =>
+  generateCharges$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(SubscriptionActions.loadSubscriptionsFailure),
-      map(({ error }) => UiActions.setError({ error }))
+      ofType(SubscriptionsActions.generateCharges),
+      switchMap(({ subscriptionId, until }) =>
+        this.subscriptionService.generateCharges(subscriptionId, until).pipe(
+          map((charges) => SubscriptionsActions.generateChargesSuccess({ charges })),
+          catchError((error) => of(SubscriptionsActions.generateChargesFailure({ error: error.message || 'Failed to generate charges' })))
+        )
+      )
     )
   );
 
-  createSubscriptionFailure$ = createEffect(() =>
+  subscriptionsFailure$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(SubscriptionActions.createSubscriptionFailure),
-      map(({ error }) => UiActions.setError({ error }))
-    )
-  );
-
-  updateSubscriptionFailure$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(SubscriptionActions.updateSubscriptionFailure),
-      map(({ error }) => UiActions.setError({ error }))
-    )
-  );
-
-  deleteSubscriptionFailure$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(SubscriptionActions.deleteSubscriptionFailure),
+      ofType(
+        SubscriptionsActions.loadSubscriptionsFailure,
+        SubscriptionsActions.loadMySubscriptionsFailure,
+        SubscriptionsActions.loadSubscriptionFailure,
+        SubscriptionsActions.createSubscriptionFailure,
+        SubscriptionsActions.updateSubscriptionFailure,
+        SubscriptionsActions.deleteSubscriptionFailure,
+        SubscriptionsActions.generateChargesFailure
+      ),
       map(({ error }) => UiActions.setError({ error }))
     )
   );

@@ -17,10 +17,34 @@ export class PaymentEffects {
   loadPayments$ = createEffect(() =>
     this.actions$.pipe(
       ofType(PaymentActions.loadPayments),
-      switchMap(() =>
-        this.paymentService.getPayments().pipe(
+      switchMap(({ status, user_id, charge_id }) =>
+        this.paymentService.getPayments({ status, user_id, charge_id }).pipe(
           map((payments) => PaymentActions.loadPaymentsSuccess({ payments })),
           catchError((error) => of(PaymentActions.loadPaymentsFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+
+  loadPendingPayments$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PaymentActions.loadPendingPayments),
+      switchMap(() =>
+        this.paymentService.getPendingPayments().pipe(
+          map((payments) => PaymentActions.loadPendingPaymentsSuccess({ payments })),
+          catchError((error) => of(PaymentActions.loadPendingPaymentsFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+
+  loadPayment$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PaymentActions.loadPayment),
+      switchMap(({ id }) =>
+        this.paymentService.getPayment(id).pipe(
+          map((payment) => PaymentActions.loadPaymentSuccess({ payment })),
+          catchError((error) => of(PaymentActions.loadPaymentFailure({ error: error.message })))
         )
       )
     )
@@ -105,6 +129,39 @@ export class PaymentEffects {
   deletePaymentFailure$ = createEffect(() =>
     this.actions$.pipe(
       ofType(PaymentActions.deletePaymentFailure),
+      map(({ error }) => UiActions.setError({ error }))
+    )
+  );
+
+  cancelPayment$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PaymentActions.cancelPayment),
+      switchMap(({ id }) =>
+        this.paymentService.cancelPayment(id).pipe(
+          map((payment) => PaymentActions.cancelPaymentSuccess({ payment })),
+          catchError((error) => of(PaymentActions.cancelPaymentFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+
+  cancelPaymentFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PaymentActions.cancelPaymentFailure),
+      map(({ error }) => UiActions.setError({ error }))
+    )
+  );
+
+  loadPendingPaymentsFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PaymentActions.loadPendingPaymentsFailure),
+      map(({ error }) => UiActions.setError({ error }))
+    )
+  );
+
+  loadPaymentFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PaymentActions.loadPaymentFailure),
       map(({ error }) => UiActions.setError({ error }))
     )
   );

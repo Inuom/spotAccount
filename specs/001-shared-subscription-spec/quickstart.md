@@ -43,11 +43,15 @@ npm install @ngrx/store @ngrx/effects @ngrx/entity @ngrx/store-devtools
 
 ### 3. Database Setup
 
-#### Initialize SQLite Database
+#### Initialize PostgreSQL Database
 ```bash
 cd backend
+# Start PostgreSQL with Docker Compose
+docker-compose up -d postgres
+
+# Generate Prisma client and apply migrations
 npx prisma generate
-npx prisma db push
+npx prisma migrate deploy
 ```
 
 #### Seed Development Data (Optional)
@@ -59,8 +63,8 @@ npx prisma db seed
 
 #### Backend Environment (.env)
 ```bash
-# Database
-DATABASE_URL="file:./dev.db"
+# Database (PostgreSQL)
+DATABASE_URL="postgresql://postgres:password@localhost:5432/spotaccount_dev"
 
 # JWT
 JWT_SECRET="your-super-secret-jwt-key"
@@ -320,8 +324,11 @@ curl -X PATCH http://localhost:3000/payments/{id}/verify \
 
 #### 1. Database Connection
 ```bash
-# Check if database file exists
-ls -la backend/dev.db
+# Check if PostgreSQL is running
+docker-compose ps postgres
+
+# Start PostgreSQL if not running
+docker-compose up -d postgres
 
 # Reset database
 cd backend
