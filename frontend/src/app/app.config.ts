@@ -9,6 +9,7 @@ import { reducers } from './store';
 import { AuthEffects } from './store/effects/auth.effects';
 import { SubscriptionEffects } from './store/effects/subscription.effects';
 import { PaymentEffects } from './store/effects/payment.effects';
+import { UserPaymentEffects } from './store/effects/user-payment.effects';
 import { UsersEffects } from './store/effects/users.effects';
 import { ChargesEffects } from './store/effects/charges.effects';
 import { authInterceptor } from './interceptors/auth.interceptor';
@@ -22,7 +23,7 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor, errorInterceptor])
     ),
     provideStore(reducers),
-    provideEffects([AuthEffects, SubscriptionEffects, PaymentEffects, UsersEffects, ChargesEffects]),
+    provideEffects([AuthEffects, SubscriptionEffects, PaymentEffects, UserPaymentEffects, UsersEffects, ChargesEffects]),
     provideStoreDevtools({
       maxAge: 25,
       logOnly: environment.production,

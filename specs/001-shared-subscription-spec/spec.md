@@ -146,6 +146,7 @@ An administrator can add an existing user as a participant to an existing subscr
 - **FR-011**: The system MUST authenticate users via username/password credentials with secure
   password requirements (minimum 8 characters, complexity rules) for all users except the initial admin seed user.
 - **FR-011.1**: The system MUST allow authenticated users to update their own password by providing their current password and a new secure password meeting the complexity requirements.
+- **FR-011.2**: The system MUST automatically restore authentication state from localStorage on application startup by dispatching checkAuth action to maintain user session across page refreshes.
 - **FR-012**: The system MUST validate data: positive monetary amounts, valid dates, active
   participants, and consistent share totals.
 - **FR-013**: The system MUST provide user-friendly error messages for all user actions and
@@ -249,3 +250,4 @@ An administrator can add an existing user as a participant to an existing subscr
 - Q: How should share calculations be handled when adding a new user to an existing subscription? → A: Recalculate all equal shares to distribute evenly among all participants including new user
 - Q: How should the system handle historical charges when a new participant is added? → A: New participant only affects future charges, existing charges remain unchanged
 - Q: What validation should occur when adding a user who already exists as a participant in the subscription? → A: Prevent duplicate participation with clear error message showing the user is already a participant
+- Q: How should the application handle authentication state restoration when users refresh the page? → A: Automatically dispatch checkAuth action on app initialization to restore auth state from localStorage

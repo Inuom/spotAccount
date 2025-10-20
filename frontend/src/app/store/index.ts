@@ -5,6 +5,7 @@ import * as fromUsers from './users/users.reducer';
 import * as fromSubscriptions from './subscriptions/subscriptions.reducer';
 import * as fromCharges from './charges/charges.reducer';
 import * as fromPayments from './payments/payment.reducer';
+import * as fromUserPayments from './user-payments/user-payment.reducer';
 
 export interface AppState {
   auth: fromAuth.AuthState;
@@ -13,6 +14,7 @@ export interface AppState {
   subscriptions: fromSubscriptions.SubscriptionsState;
   charges: fromCharges.ChargesState;
   payments: fromPayments.PaymentsState;
+  userPayments: fromUserPayments.UserPaymentsState;
 }
 
 export const reducers: ActionReducerMap<AppState> = {
@@ -22,5 +24,6 @@ export const reducers: ActionReducerMap<AppState> = {
   subscriptions: fromSubscriptions.subscriptionsReducer,
   charges: fromCharges.chargesReducer,
   payments: fromPayments.paymentsReducer,
+  userPayments: fromUserPayments.userPaymentsReducer,
 };
 

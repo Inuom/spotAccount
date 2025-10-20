@@ -10,6 +10,8 @@ import { User } from '../../../models/user.model';
 import { Payment } from '../../../models/payment.model';
 import * as AuthActions from '../../../store/auth/auth.actions';
 import { selectUser } from '../../../store/auth/auth.selectors';
+import * as UserPaymentActions from '../../../store/user-payments/user-payment.actions';
+import * as UserPaymentSelectors from '../../../store/user-payments/user-payment.selectors';
 
 @Component({
   selector: 'app-user-dashboard',
@@ -35,18 +37,18 @@ import { selectUser } from '../../../store/auth/auth.selectors';
         
         <div class="stat-card">
           <h3>Pending Payments</h3>
-          <p class="stat-value">0</p>
+          <p class="stat-value">{{ (paymentStats$ | async)?.pendingPayments || 0 }}</p>
           <a routerLink="/user/payments" class="btn-link">Manage Payments</a>
         </div>
         
         <div class="stat-card">
-          <h3>Total Owed</h3>
-          <p class="stat-value">€0.00</p>
+          <h3>Total Payments</h3>
+          <p class="stat-value">{{ (paymentStats$ | async)?.totalPayments || 0 }}</p>
         </div>
         
         <div class="stat-card">
-          <h3>Total Paid</h3>
-          <p class="stat-value">€0.00</p>
+          <h3>Total Amount</h3>
+          <p class="stat-value">€{{ ((paymentStats$ | async)?.totalAmount || 0) | number:'1.2-2' }}</p>
         </div>
       </div>
 
@@ -73,12 +75,36 @@ import { selectUser } from '../../../store/auth/auth.selectors';
         </div>
       </div>
 
-      <!-- Recent Activity -->
+      <!-- Recent Payments -->
       <div class="section">
-        <h2>Recent Activity</h2>
-        <div class="empty-state">
-          <p>No recent activity to display.</p>
-        </div>
+        <h2>Recent Payments</h2>
+        <ng-container *ngIf="(recentPayments$ | async) as payments; else noRecentPayments">
+          <div class="recent-payments" *ngIf="payments.length > 0">
+            <div class="payment-item" *ngFor="let payment of payments | slice:0:5">
+              <div class="payment-info">
+                <span class="payment-amount">€{{ payment.amount | number:'1.2-2' }}</span>
+                <span class="payment-status" [class]="'status-' + payment.status.toLowerCase()">
+                  {{ payment.status }}
+                </span>
+              </div>
+              <div class="payment-details">
+                <span class="payment-date">{{ payment.scheduled_date | date:'short' }}</span>
+                <span class="payment-subscription" *ngIf="payment.charge?.subscription?.title">
+                  For {{ payment.charge?.subscription?.title }}
+                </span>
+              </div>
+            </div>
+            <div class="view-all-link">
+              <a routerLink="/user/payments" class="btn-link">View All Payments</a>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #noRecentPayments>
+          <div class="empty-state">
+            <p>No recent payments to display.</p>
+            <a routerLink="/user/payments" class="btn-link">Create your first payment</a>
+          </div>
+        </ng-template>
       </div>
     </div>
   `,
@@ -219,20 +245,92 @@ import { selectUser } from '../../../store/auth/auth.selectors';
       padding: 3rem;
       color: #666;
     }
+
+    .recent-payments {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .payment-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+    }
+
+    .payment-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .payment-amount {
+      font-weight: 600;
+      color: #333;
+      font-size: 1.1rem;
+    }
+
+    .payment-status {
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-verified {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-cancelled {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .payment-details {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .view-all-link {
+      margin-top: 1rem;
+      text-align: center;
+    }
   `]
 })
 export class UserDashboardComponent implements OnInit {
   user$: Observable<User | null>;
+  paymentStats$: Observable<any>;
+  recentPayments$: Observable<Payment[]>;
 
   constructor(
     private store: Store<AppState>,
     private router: Router
   ) {
     this.user$ = this.store.select(selectUser);
+    this.paymentStats$ = this.store.select(UserPaymentSelectors.selectUserPaymentStats);
+    this.recentPayments$ = this.store.select(UserPaymentSelectors.selectAllUserPaymentsSelector);
   }
 
   ngOnInit(): void {
-    // Load any user-specific data here if needed
+    // Load user payment data
+    this.store.dispatch(UserPaymentActions.loadUserPaymentStats());
+    this.store.dispatch(UserPaymentActions.loadUserPayments({ status: 'all' }));
   }
 
   logout(): void {

@@ -148,23 +148,23 @@
 
 ### T085-T093: Backend Implementation
 
-- [ ] T085 [P] [US3] Implement User payment endpoints in backend/src/payments/user-payments.controller.ts
-- [ ] T086 [P] [US3] Implement Payment ownership validation in backend/src/payments/payment-ownership.guard.ts
-- [ ] T087 [P] [US3] Implement Payment modification restrictions in backend/src/payments/payment-modification.service.ts
-- [ ] T088 [P] [US3] Create User payment DTOs in backend/src/payments/dto/user-payment.dto.ts
-- [ ] T089 [P] [US3] Implement User payment repository in backend/src/payments/user-payments.repository.ts
-- [ ] T090 [P] [US3] Create User payment module in backend/src/payments/user-payments.module.ts
-- [ ] T091 [P] [US3] Implement Payment validation service in backend/src/payments/payment-validation.service.ts
-- [ ] T092 [P] [US3] Create Payment conflict resolution in backend/src/payments/payment-conflict.service.ts
-- [ ] T093 [P] [US3] Implement Payment scheduling logic in backend/src/payments/payment-scheduling.service.ts
+- [X] T085 [P] [US3] Implement User payment endpoints in backend/src/payments/user-payments.controller.ts
+- [X] T086 [P] [US3] Implement Payment ownership validation in backend/src/payments/payment-ownership.guard.ts
+- [X] T087 [P] [US3] Implement Payment modification restrictions in backend/src/payments/payment-modification.service.ts
+- [X] T088 [P] [US3] Create User payment DTOs in backend/src/payments/dto/user-payment.dto.ts
+- [X] T089 [P] [US3] Implement User payment repository in backend/src/payments/user-payments.repository.ts
+- [X] T090 [P] [US3] Create User payment module in backend/src/payments/user-payments.module.ts
+- [X] T091 [P] [US3] Implement Payment validation service in backend/src/payments/payment-validation.service.ts
+- [X] T092 [P] [US3] Create Payment conflict resolution in backend/src/payments/payment-conflict.service.ts
+- [X] T093 [P] [US3] Implement Payment scheduling logic in backend/src/payments/payment-scheduling.service.ts
 
 ### T094-T098: Frontend Implementation
 
-- [ ] T094 [P] [US3] Create User payment page in frontend/src/app/pages/user/payments/
-- [ ] T095 [P] [US3] Create User payment form in frontend/src/app/components/user-payment-form/
-- [ ] T096 [P] [US3] Create User payment list in frontend/src/app/components/user-payment-list/
-- [ ] T097 [P] [US3] Create User payment history in frontend/src/app/components/user-payment-history/
-- [ ] T098 [P] [US3] Create User payment dashboard in frontend/src/app/pages/user/dashboard/
+- [X] T094 [P] [US3] Create User payment page in frontend/src/app/pages/user/payments/
+- [X] T095 [P] [US3] Create User payment form in frontend/src/app/components/user-payment-form/
+- [X] T096 [P] [US3] Create User payment list in frontend/src/app/components/user-payment-list/
+- [X] T097 [P] [US3] Create User payment history in frontend/src/app/components/user-payment-history/
+- [X] T098 [P] [US3] Create User payment dashboard in frontend/src/app/pages/user/dashboard/
 
 ## Phase 7: User Story 4 - Reports and Balances (P3)
 

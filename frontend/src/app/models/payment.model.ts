@@ -56,3 +56,35 @@ export interface UpdatePaymentDto {
 export interface VerifyPaymentDto {
   verification_reference?: string;
 }
+
+export interface CreateUserPaymentDto {
+  charge_id?: string;
+  amount: number;
+  currency?: string;
+  scheduled_date: string;
+}
+
+export interface UpdateUserPaymentDto {
+  amount?: number;
+  scheduled_date?: string;
+}
+
+export interface UserPaymentStats {
+  totalPayments: number;
+  pendingPayments: number;
+  verifiedPayments: number;
+  cancelledPayments: number;
+  totalAmount: number;
+}
+
+export interface PaymentSchedule {
+  upcomingPayments: number;
+  nextPaymentDate?: Date;
+  recentPayments: number;
+}
+
+export interface SuggestedSchedule {
+  suggestedDate: Date;
+  alternativeDates: Date[];
+  reason: string;
+}

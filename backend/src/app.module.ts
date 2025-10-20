@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { ChargesModule } from './charges/charges.module';
 import { PaymentsModule } from './payments/payments.module';
+import { UserPaymentsModule } from './payments/user-payments.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PaymentsModule } from './payments/payments.module';
     SubscriptionsModule,
     ChargesModule,
     PaymentsModule,
+    UserPaymentsModule,
   ],
   controllers: [],
   providers: [],
