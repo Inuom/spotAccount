@@ -11,6 +11,10 @@ export const USER_ROUTES: Routes = [
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.UserDashboardComponent)
   },
   {
+    path: 'balance',
+    loadComponent: () => import('./balance/balance.component').then(m => m.BalanceComponent)
+  },
+  {
     path: 'account',
     loadComponent: () => import('./account/account.component').then(m => m.AccountComponent)
   },

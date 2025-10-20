@@ -50,6 +50,12 @@ import * as UserPaymentSelectors from '../../../store/user-payments/user-payment
           <h3>Total Amount</h3>
           <p class="stat-value">€{{ ((paymentStats$ | async)?.totalAmount || 0) | number:'1.2-2' }}</p>
         </div>
+        
+        <div class="stat-card">
+          <h3>My Balance</h3>
+          <p class="stat-value">View Details</p>
+          <a routerLink="/user/balance" class="btn-link">View Balance</a>
+        </div>
       </div>
 
       <!-- Quick Actions -->
@@ -71,6 +77,10 @@ import * as UserPaymentSelectors from '../../../store/user-payments/user-payment
           <button class="action-btn" routerLink="/user/payments">
             <span class="icon">💳</span>
             <span>My Payments</span>
+          </button>
+          <button class="action-btn" routerLink="/user/balance">
+            <span class="icon">💰</span>
+            <span>My Balance</span>
           </button>
         </div>
       </div>

@@ -1,0 +1,51 @@
+<div class="reports-container">
+  <div class="reports-header">
+    <h2>Reports Dashboard</h2>
+  </div>
+
+  <div class="report-controls">
+    <div class="control-group">
+      <label for="reportType">Report Type:</label>
+      <select id="reportType" [(ngModel)]="reportType" class="form-control">
+        <option value="all">All Balances</option>
+        <option value="subscription">Subscription Balance</option>
+        <option value="user">User Balance</option>
+      </select>
+    </div>
+
+    <div class="control-group" *ngIf="reportType === 'subscription'">
+      <label for="subscriptionId">Subscription ID:</label>
+      <input type="text" id="subscriptionId" [(ngModel)]="subscriptionId" class="form-control" />
+    </div>
+
+    <div class="control-group" *ngIf="reportType === 'user'">
+      <label for="userId">User ID:</label>
+      <input type="text" id="userId" [(ngModel)]="userId" class="form-control" />
+    </div>
+
+    <div class="control-group">
+      <label for="asOfDate">As of Date:</label>
+      <input type="date" id="asOfDate" [(ngModel)]="asOfDate" class="form-control" />
+    </div>
+
+    <button (click)="generateReport()" class="btn-primary" [disabled]="loading$ | async">
+      Generate Report
+    </button>
+  </div>
+
+  <div *ngIf="loading$ | async" class="loading">
+    Loading report...
+  </div>
+
+  <div *ngIf="error$ | async as error" class="error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="(report$ | async) as report" class="report-content">
+    <h3>Report: {{ report.report_type }}</h3>
+    <p>Generated: {{ report.generated_at | date:'short' }}</p>
+    <p>As of Date: {{ report.as_of_date | date:'short' }}</p>
+    <pre>{{ report.data | json }}</pre>
+  </div>
+</div>
+

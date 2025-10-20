@@ -1,0 +1,82 @@
+<div class="balance-container">
+  <div class="balance-header">
+    <h2>My Balance</h2>
+    <div class="balance-actions">
+      <div class="date-filter">
+        <label for="asOfDate">As of Date:</label>
+        <input 
+          type="date" 
+          id="asOfDate" 
+          [(ngModel)]="asOfDate" 
+          (change)="onDateChange()"
+          class="date-input"
+        />
+        <button *ngIf="asOfDate" (click)="clearDate()" class="btn-clear">Clear</button>
+      </div>
+      <button (click)="refresh()" class="btn-refresh" [disabled]="loading$ | async">
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading$ | async" class="loading">
+    <div class="spinner"></div>
+    <p>Loading balance...</p>
+  </div>
+
+  <div *ngIf="error$ | async as error" class="error">
+    <p>{{ error }}</p>
+    <button (click)="loadBalance()" class="btn-retry">Retry</button>
+  </div>
+
+  <div *ngIf="(balance$ | async) as balance" class="balance-content">
+    <div class="balance-summary">
+      <div class="balance-card total-charges">
+        <h3>Total Charges</h3>
+        <p class="amount">\${{ balance.total_charges.toFixed(2) }}</p>
+      </div>
+
+      <div class="balance-card verified-payments">
+        <h3>Verified Payments</h3>
+        <p class="amount success">\${{ balance.total_verified_payments.toFixed(2) }}</p>
+      </div>
+
+      <div class="balance-card pending-payments">
+        <h3>Pending Payments</h3>
+        <p class="amount warning">\${{ balance.total_pending_payments.toFixed(2) }}</p>
+      </div>
+
+      <div class="balance-card balance-due">
+        <h3>Balance Due</h3>
+        <p class="amount" [class.error]="balance.balance_due > 0" [class.success]="balance.balance_due <= 0">
+          \${{ balance.balance_due.toFixed(2) }}
+        </p>
+      </div>
+
+      <div class="balance-card balance-with-pending">
+        <h3>Balance with Pending</h3>
+        <p class="amount" [class.error]="balance.balance_with_pending > 0" [class.success]="balance.balance_with_pending <= 0">
+          \${{ balance.balance_with_pending.toFixed(2) }}
+        </p>
+        <small class="info">Includes pending payments</small>
+      </div>
+    </div>
+
+    <div class="user-info">
+      <h3>Account Information</h3>
+      <p><strong>Name:</strong> {{ balance.user_name }}</p>
+      <p><strong>Email:</strong> {{ balance.user_email }}</p>
+    </div>
+
+    <div class="balance-actions-bottom">
+      <button routerLink="/user/payments" class="btn-primary">Make a Payment</button>
+      <button routerLink="/user/payments" class="btn-secondary">View Payment History</button>
+    </div>
+  </div>
+
+  <div *ngIf="!(loading$ | async) && !(error$ | async) && !(balance$ | async)" class="no-data">
+    <p>No balance data available</p>
+    <button (click)="loadBalance()" class="btn-primary">Load Balance</button>
+  </div>
+</div>
+
