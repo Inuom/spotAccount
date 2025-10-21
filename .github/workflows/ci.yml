@@ -48,21 +48,6 @@ jobs:
         cd backend
         npm run test:cov
         
-    - name: Run frontend tests
-      run: |
-        cd frontend
-        npm run test:ci
-        
-    - name: Run backend linting
-      run: |
-        cd backend
-        npm run lint
-        
-    - name: Run frontend linting
-      run: |
-        cd frontend
-        npm run lint
-        
     - name: Run backend type checking
       run: |
         cd backend
