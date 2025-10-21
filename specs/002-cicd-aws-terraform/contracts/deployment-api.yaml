@@ -1,0 +1,344 @@
+openapi: 3.0.3
+info:
+  title: CI/CD Deployment API
+  description: API for managing CI/CD pipeline deployments and infrastructure
+  version: 1.0.0
+  termsOfService: https://github.com/example/spotAccount
+  contact:
+    name: Development Team
+    url: https://github.com/example/spotAccount
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.spotaccount.com
+    description: Production API server
+
+paths:
+  /api/deployments:
+    get:
+      summary: List deployment pipelines
+      description: Retrieves a list of CI/CD pipeline deployments
+      tags:
+        - Deployments
+      parameters:
+        - name: status
+          in: query
+          description: Filter by pipeline status
+          schema:
+            type: string
+            enum: [pending, running, succeeded, failed, cancelled]
+        - name: environment
+          in: query
+          description: Filter by target environment
+          schema:
+            type: string
+            enum: [production]
+        - name: limit
+          in: query
+          description: Maximum number of deployments to return
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: List of deployments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Deployment'
+                  total:
+                    type: integer
+                    description: Total number of deployments matching filters
+                  page:
+                    type: integer
+                    description: Current page number
+                  limit:
+                    type: integer
+                    description: Number of deployments per page
+
+  /api/deployments/{deploymentId}:
+    get:
+      summary: Get deployment details
+      description: Retrieves details of a specific deployment pipeline run
+      tags:
+        - Deployments
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          description: Pipeline run ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deployment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '404':
+          description: Deployment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/deployments/{deploymentId}/logs:
+    get:
+      summary: Get deployment logs
+      description: Retrieves execution logs for a specific deployment
+      tags:
+        - Deployments
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          description: Pipeline run ID
+          schema:
+            type: string
+        - name: stage
+          in: query
+          description: Filter logs by pipeline stage
+          schema:
+            type: string
+            enum: [build, test, deploy, infrastructure]
+      responses:
+        '200':
+          description: Deployment logs
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Log content
+
+  /api/infrastructure/status:
+    get:
+      summary: Get infrastructure status
+      description: Retrieves current status of AWS infrastructure components
+      tags:
+        - Infrastructure
+      responses:
+        '200':
+          description: Infrastructure status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfrastructureStatus'
+
+  /api/infrastructure/plan:
+    post:
+      summary: Plan infrastructure changes
+      description: Generates a Terraform plan for infrastructure changes
+      tags:
+        - Infrastructure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                changes:
+                  type: object
+                  description: Proposed infrastructure changes
+      responses:
+        '200':
+          description: Terraform plan generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TerraformPlan'
+        '400':
+          description: Invalid change request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Deployment:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - environment
+        - startedAt
+      properties:
+        id:
+          type: string
+          description: Pipeline run ID
+        name:
+          type: string
+          description: Pipeline name
+        status:
+          type: string
+          enum: [pending, running, succeeded, failed, cancelled]
+          description: Current pipeline status
+        trigger:
+          type: string
+          enum: [push, pull_request, manual]
+          description: What triggered the pipeline
+        branch:
+          type: string
+          description: Source branch name
+        commitSha:
+          type: string
+          description: Git commit hash
+        startedAt:
+          type: string
+          format: date-time
+          description: Pipeline start time
+        completedAt:
+          type: string
+          format: date-time
+          description: Pipeline completion time
+        duration:
+          type: integer
+          description: Execution duration in seconds
+        environment:
+          type: string
+          enum: [production]
+          description: Target deployment environment
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artifact'
+          description: Built application artifacts
+
+    Artifact:
+      type: object
+      required:
+        - type
+        - name
+        - version
+      properties:
+        type:
+          type: string
+          enum: [backend_image, frontend_files]
+          description: Artifact type
+        name:
+          type: string
+          description: Artifact name
+        version:
+          type: string
+          description: Version tag or commit hash
+        size:
+          type: integer
+          description: Artifact size in bytes
+        checksum:
+          type: string
+          description: SHA256 checksum
+        registryLocation:
+          type: string
+          description: Storage location (ECR/S3)
+        createdAt:
+          type: string
+          format: date-time
+          description: Build creation time
+
+    InfrastructureStatus:
+      type: object
+      required:
+        - environment
+        - lastUpdated
+      properties:
+        environment:
+          type: string
+          enum: [production]
+          description: Environment name
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall infrastructure health
+        lastUpdated:
+          type: string
+          format: date-time
+          description: Last status check time
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/InfrastructureComponent'
+          description: Individual component statuses
+
+    InfrastructureComponent:
+      type: object
+      required:
+        - name
+        - type
+        - status
+      properties:
+        name:
+          type: string
+          description: Component name
+        type:
+          type: string
+          enum: [vpc, ecs, rds, s3, cloudfront, alb]
+          description: Component type
+        status:
+          type: string
+          enum: [running, stopped, pending, failed]
+          description: Component status
+        lastChecked:
+          type: string
+          format: date-time
+          description: Last health check time
+        details:
+          type: object
+          description: Component-specific details
+
+    TerraformPlan:
+      type: object
+      required:
+        - planId
+        - status
+        - changes
+      properties:
+        planId:
+          type: string
+          description: Unique plan identifier
+        status:
+          type: string
+          enum: [planned, applied, failed]
+          description: Plan status
+        changes:
+          type: object
+          description: Planned infrastructure changes
+        createdAt:
+          type: string
+          format: date-time
+          description: Plan creation time
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+
+security:
+  - bearerAuth: []
