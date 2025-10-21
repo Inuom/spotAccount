@@ -48,16 +48,16 @@
 
 ### Foundational Tasks
 
-- [ ] T011 [P] Create VPC and networking configuration in infrastructure/terraform/vpc.tf
-- [ ] T012 [P] Create IAM roles and policies in infrastructure/terraform/iam.tf
-- [ ] T013 [P] Create S3 bucket for Terraform state storage in infrastructure/terraform/state.tf
-- [ ] T014 [P] Create DynamoDB table for state locking in infrastructure/terraform/state.tf
-- [ ] T015 [P] Configure backend Dockerfile for Fargate deployment in backend/Dockerfile
-- [ ] T016 [P] Configure frontend build process for S3 deployment in frontend/package.json
-- [ ] T017 [P] Set up ECR repository for Docker images in infrastructure/terraform/ecr.tf
-- [ ] T018 [P] Create CloudWatch log groups in infrastructure/terraform/logs.tf
-- [ ] T019 [P] Configure health check endpoint in backend/src/health/health.controller.ts
-- [ ] T020 [P] Set up database migration scripts in backend/prisma/migrations/
+- [x] T011 [P] Create VPC and networking configuration in infrastructure/terraform/vpc.tf
+- [x] T012 [P] Create IAM roles and policies in infrastructure/terraform/iam.tf
+- [x] T013 [P] Create S3 bucket for Terraform state storage in infrastructure/terraform/state.tf
+- [x] T014 [P] Create DynamoDB table for state locking in infrastructure/terraform/state.tf
+- [x] T015 [P] Configure backend Dockerfile for Fargate deployment in backend/Dockerfile
+- [x] T016 [P] Configure frontend build process for S3 deployment in frontend/package.json
+- [x] T017 [P] Set up ECR repository for Docker images in infrastructure/terraform/ecr.tf
+- [x] T018 [P] Create CloudWatch log groups in infrastructure/terraform/logs.tf
+- [x] T019 [P] Configure health check endpoint in backend/src/health/health.controller.ts
+- [x] T020 [P] Set up database migration scripts in backend/prisma/migrations/
 
 ## Phase 3: User Story 1 - Automated CI/CD Pipeline (P1)
 

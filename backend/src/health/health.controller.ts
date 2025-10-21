@@ -36,5 +36,14 @@ export class HealthController {
       };
     }
   }
+
+  @Get('healthz')
+  @Public()
+  async healthz() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
 
