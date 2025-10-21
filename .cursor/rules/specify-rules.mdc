@@ -30,8 +30,8 @@ Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions
 
 ## Recent Changes
 - 002-cicd-aws-terraform: Added Node.js 18+, TypeScript, Terraform 1.5+, YAML (GitHub Actions) + GitHub Actions, AWS CLI, Docker, Terraform, AWS ECS/Fargate, AWS RDS PostgreSQL, AWS S3, AWS CloudFront
+- 002-cicd-aws-terraform: Added Node.js 18+, TypeScript, Terraform 1.5+, YAML (GitHub Actions) + GitHub Actions, AWS CLI, Docker, Terraform, AWS ECS/Fargate, AWS RDS PostgreSQL, AWS S3, AWS CloudFront
 - 001-shared-subscription-spec: Added TypeScript 5.0+, Node.js 18+ (LTS), Angular 17+ + NestJS, Prisma ORM, PostgreSQL, NgRx, Angular Material
-- 001-shared-subscription-spec: Added TypeScript 5.x (Angular 17+ frontend, NestJS backend) + Angular 17+ with NgRx, NestJS with Prisma ORM, PostgreSQL
 
 ## Code Style
 Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions

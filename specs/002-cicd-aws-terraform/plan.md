@@ -11,12 +11,6 @@ Implement automated CI/CD pipeline using GitHub Actions and AWS infrastructure p
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
-
 **Language/Version**: Node.js 18+, TypeScript, Terraform 1.5+, YAML (GitHub Actions)  
 **Primary Dependencies**: GitHub Actions, AWS CLI, Docker, Terraform, AWS ECS/Fargate, AWS RDS PostgreSQL, AWS S3, AWS CloudFront  
 **Storage**: AWS RDS PostgreSQL with automated backups and point-in-time recovery  
@@ -71,12 +65,6 @@ specs/002-cicd-aws-terraform/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```
 backend/                 # Existing NestJS backend
@@ -114,8 +102,5 @@ infrastructure/          # NEW: Infrastructure as Code
 
 *Fill ONLY if Constitution Check has violations that must be justified*
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+No violations detected - all constitution principles are satisfied with the chosen architecture.
 

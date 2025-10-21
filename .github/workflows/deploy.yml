@@ -1,93 +1,182 @@
-name: Deploy to AWS
+name: Infrastructure Deployment
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: 'us-east-1'
+  TF_VERSION: '1.5.0'
 
 jobs:
-  deploy:
-    name: Deploy to AWS
+  terraform-plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
-    environment: production
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+        
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Terraform Init
+      run: |
+        cd infrastructure/terraform
+        terraform init \
+          -backend-config="bucket=${{ secrets.TERRAFORM_BACKEND_BUCKET }}" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="region=${{ env.AWS_REGION }}" \
+          -backend-config="dynamodb_table=${{ secrets.TERRAFORM_BACKEND_DYNAMODB_TABLE }}"
+          
+    - name: Terraform Plan
+      run: |
+        cd infrastructure/terraform
+        terraform plan -var-file="production.tfvars" -out=tfplan
+        terraform show -no-color tfplan > plan.txt
+        
+    - name: Upload Terraform Plan
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-plan
+        path: infrastructure/terraform/plan.txt
 
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.5.0
-
+        terraform_version: ${{ env.TF_VERSION }}
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Download Terraform Plan
+      uses: actions/download-artifact@v4
+      with:
+        name: terraform-plan
+        path: infrastructure/terraform/
+        
     - name: Terraform Init
-      working-directory: ./infrastructure/terraform
-      run: terraform init
-
-    - name: Terraform Plan
-      working-directory: ./infrastructure/terraform
-      run: terraform plan -var-file="production.tfvars"
-
+      run: |
+        cd infrastructure/terraform
+        terraform init \
+          -backend-config="bucket=${{ secrets.TERRAFORM_BACKEND_BUCKET }}" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="region=${{ env.AWS_REGION }}" \
+          -backend-config="dynamodb_table=${{ secrets.TERRAFORM_BACKEND_DYNAMODB_TABLE }}"
+          
     - name: Terraform Apply
-      working-directory: ./infrastructure/terraform
-      run: terraform apply -auto-approve -var-file="production.tfvars"
-
-    - name: Deploy Backend to ECS
       run: |
-        # Build and push Docker image
-        docker build -t ${{ secrets.ECR_REGISTRY }}/backend:latest ./backend
-        docker push ${{ secrets.ECR_REGISTRY }}/backend:latest
+        cd infrastructure/terraform
+        terraform apply -auto-approve -var-file="production.tfvars"
         
-        # Update ECS service
-        aws ecs update-service \
-          --cluster ${{ secrets.ECS_CLUSTER }} \
-          --service ${{ secrets.ECS_SERVICE_BACKEND }} \
-          --force-new-deployment
-
-    - name: Deploy Frontend to S3
+    - name: Output Infrastructure Information
       run: |
-        # Build frontend
-        cd frontend
-        npm ci
-        npm run build
-        
-        # Upload to S3
-        aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_FRONTEND }} --delete
-        
-        # Invalidate CloudFront cache
-        aws cloudfront create-invalidation \
-          --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-          --paths "/*"
+        cd infrastructure/terraform
+        echo "## Infrastructure Deployment Complete" >> $GITHUB_STEP_SUMMARY
+        echo "### VPC ID: $(terraform output -raw vpc_id)" >> $GITHUB_STEP_SUMMARY
+        echo "### ECS Cluster: $(terraform output -raw ecs_cluster_id)" >> $GITHUB_STEP_SUMMARY
+        echo "### RDS Endpoint: $(terraform output -raw rds_endpoint)" >> $GITHUB_STEP_SUMMARY
+        echo "### ALB DNS: $(terraform output -raw alb_dns_name)" >> $GITHUB_STEP_SUMMARY
+        echo "### CloudFront Domain: $(terraform output -raw cloudfront_domain_name)" >> $GITHUB_STEP_SUMMARY
 
-    - name: Run Database Migrations
-      run: |
-        # Get ECS task ARN
-        TASK_ARN=$(aws ecs list-tasks --cluster ${{ secrets.ECS_CLUSTER }} --service-name ${{ secrets.ECS_SERVICE_BACKEND }} --query 'taskArns[0]' --output text)
+  infrastructure-validation:
+    name: Infrastructure Validation
+    runs-on: ubuntu-latest
+    needs: terraform-apply
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
         
-        # Run migrations
-        aws ecs execute-command \
-          --cluster ${{ secrets.ECS_CLUSTER }} \
-          --task $TASK_ARN \
-          --container backend \
-          --command "npx prisma migrate deploy" \
-          --interactive
+    - name: Validate VPC
+      run: |
+        VPC_ID=$(cd infrastructure/terraform && terraform output -raw vpc_id)
+        aws ec2 describe-vpcs --vpc-ids $VPC_ID --query 'Vpcs[0].State' --output text
+        
+    - name: Validate ECS Cluster
+      run: |
+        CLUSTER_ARN=$(cd infrastructure/terraform && terraform output -raw ecs_cluster_arn)
+        aws ecs describe-clusters --clusters $CLUSTER_ARN --query 'clusters[0].status' --output text
+        
+    - name: Validate RDS Instance
+      run: |
+        RDS_ENDPOINT=$(cd infrastructure/terraform && terraform output -raw rds_endpoint)
+        aws rds describe-db-instances --query "DBInstances[?Endpoint.Address=='$RDS_ENDPOINT'].DBInstanceStatus" --output text
+        
+    - name: Validate S3 Bucket
+      run: |
+        BUCKET_ID=$(cd infrastructure/terraform && terraform output -raw s3_bucket_id)
+        aws s3api head-bucket --bucket $BUCKET_ID
+        
+    - name: Validate CloudFront Distribution
+      run: |
+        DISTRIBUTION_ID=$(cd infrastructure/terraform && terraform output -raw cloudfront_distribution_id)
+        aws cloudfront get-distribution --id $DISTRIBUTION_ID --query 'Distribution.Status' --output text
+        
+    - name: Validate ALB
+      run: |
+        ALB_ARN=$(cd infrastructure/terraform && terraform output -raw alb_arn)
+        aws elbv2 describe-load-balancers --load-balancer-arns $ALB_ARN --query 'LoadBalancers[0].State.Code' --output text
 
-    - name: Health Check
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [terraform-apply, infrastructure-validation]
+    if: always()
+    
+    steps:
+    - name: Notify Success
+      if: needs.terraform-apply.result == 'success' && needs.infrastructure-validation.result == 'success'
       run: |
-        # Wait for deployment to be healthy
-        aws ecs wait services-stable \
-          --cluster ${{ secrets.ECS_CLUSTER }} \
-          --services ${{ secrets.ECS_SERVICE_BACKEND }}
+        echo "✅ Infrastructure deployment completed successfully!"
+        echo "All AWS resources have been provisioned and validated."
         
-        # Test health endpoint
-        curl -f ${{ secrets.BACKEND_URL }}/api/health || exit 1
+    - name: Notify Failure
+      if: needs.terraform-apply.result == 'failure' || needs.infrastructure-validation.result == 'failure'
+      run: |
+        echo "❌ Infrastructure deployment failed!"
+        echo "Please check the logs for details."
+        exit 1
