@@ -21,11 +21,7 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "availability_zones" {
-  description = "List of availability zones"
-  type        = list(string)
-  default     = []
-}
+# availability_zones is now derived from data.aws_availability_zones.available.names
 
 # VPC Configuration
 variable "vpc_cidr" {

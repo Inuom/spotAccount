@@ -172,10 +172,16 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
         
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+        
     - name: Deploy infrastructure with Terraform
       run: |
         cd infrastructure/terraform
-        terraform init
+        # Initialize Terraform with local backend for CI/CD
+        terraform init -backend=false
         terraform plan -var-file="production.tfvars"
         terraform apply -auto-approve -var-file="production.tfvars"
         
