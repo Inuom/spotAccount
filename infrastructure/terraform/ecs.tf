@@ -131,8 +131,4 @@ resource "aws_ssm_parameter" "database_url" {
   })
 }
 
-# Random password for database
-resource "random_password" "db_password" {
-  length  = 16
-  special = true
-}
+te# Random password for database is defined in rds.tf
