@@ -12,13 +12,24 @@ resource "aws_db_subnet_group" "main" {
   })
 }
 
+# Create a new subnet group for the transition
+resource "aws_db_subnet_group" "main_new" {
+  name       = "${var.project_name}-${var.environment}-db-subnet-group-new"
+  subnet_ids = module.vpc.public_subnets
+
+  tags = merge(var.common_tags, {
+    Name        = "${var.project_name}-${var.environment}-db-subnet-group-new"
+    Purpose     = "database-subnet-group-new"
+  })
+}
+
 # RDS Instance
 resource "aws_db_instance" "main" {
   identifier = "${var.project_name}-${var.environment}-db"
 
   # Engine Configuration
   engine         = "postgres"
-  engine_version = "15.4"
+  engine_version = "15.14"
   instance_class = var.db_instance_class
 
   # Storage Configuration
@@ -36,8 +47,8 @@ resource "aws_db_instance" "main" {
   # Network Configuration
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  publicly_accessible    = false
-
+  publicly_accessible    = true
+  
   # Backup Configuration
   backup_retention_period = var.db_backup_retention_period
   backup_window          = var.db_backup_window

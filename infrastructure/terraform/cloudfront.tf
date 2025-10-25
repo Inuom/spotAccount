@@ -48,6 +48,7 @@ resource "aws_cloudfront_distribution" "frontend" {
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
     cached_methods  = ["GET", "HEAD", "OPTIONS"]
     target_origin_id = "S3-${aws_s3_bucket.frontend.bucket}"
+    viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
       query_string = false

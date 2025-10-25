@@ -18,6 +18,11 @@ on:
 env:
   NODE_VERSION: '18'
   AWS_REGION: 'eu-west-1'
+  ECR_BACKEND_REPOSITORY: 'spotaccount-backend'
+  ECR_FRONTEND_REPOSITORY: 'spotaccount-frontend'
+  ECS_CLUSTER: 'spotaccount-cluster'
+  ECS_SERVICE: 'spotaccount-service'
+  TERRAFORM_VERSION: '1.6.0'
 
 jobs:
   test:
@@ -47,6 +52,10 @@ jobs:
       run: |
         cd backend
         npm run test:cov
+      env:
+        DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+        JWT_SECRET: "test-jwt-secret"
+        NODE_ENV: "test"
         
     - name: Run backend type checking
       run: |
@@ -140,20 +149,18 @@ jobs:
     - name: Build and push backend Docker image
       run: |
         cd backend
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:backend-$GITHUB_SHA .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:backend-$GITHUB_SHA
+        docker build -t $ECR_REGISTRY/${{ env.ECR_BACKEND_REPOSITORY }}:$GITHUB_SHA .
+        docker push $ECR_REGISTRY/${{ env.ECR_BACKEND_REPOSITORY }}:$GITHUB_SHA
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: spotaccount-backend
         
     - name: Build and push frontend Docker image
       run: |
         cd frontend
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$GITHUB_SHA .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$GITHUB_SHA
+        docker build -t $ECR_REGISTRY/${{ env.ECR_FRONTEND_REPOSITORY }}:$GITHUB_SHA .
+        docker push $ECR_REGISTRY/${{ env.ECR_FRONTEND_REPOSITORY }}:$GITHUB_SHA
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: spotaccount-frontend
 
   deploy:
     name: Deploy to Production
@@ -175,29 +182,35 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.6.0
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
         
     - name: Deploy infrastructure with Terraform
       run: |
         cd infrastructure/terraform
-        # Initialize Terraform with local backend for CI/CD
-        terraform init -backend=false
+        # Initialize Terraform with S3 backend
+        terraform init \
+          -backend-config="bucket=${{ secrets.TERRAFORM_BACKEND_BUCKET }}" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="region=${{ env.AWS_REGION }}" \
+          -backend-config="dynamodb_table=${{ secrets.TERRAFORM_BACKEND_DYNAMODB_TABLE }}"
         terraform plan -var-file="production.tfvars"
         terraform apply -auto-approve -var-file="production.tfvars"
+      env:
+        TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
         
     - name: Deploy application to ECS
       run: |
         # Update ECS service with new task definition
         aws ecs update-service \
-          --cluster spotaccount-cluster \
-          --service spotaccount-service \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE }} \
           --force-new-deployment
           
     - name: Wait for deployment to complete
       run: |
         aws ecs wait services-stable \
-          --cluster spotaccount-cluster \
-          --services spotaccount-service
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }}
           
     - name: Health check
       run: |

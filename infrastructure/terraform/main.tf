@@ -14,6 +14,7 @@ terraform {
   backend "s3" {
     # Backend configuration will be set via terraform init -backend-config
     # This allows for dynamic backend configuration
+    # region will be provided via -backend-config or environment variables
   }
 }
 

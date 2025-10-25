@@ -146,9 +146,12 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload",
-          "ecr:PutImage"
+          "ecr:PutImage",
+          "ecr:CreateRepository",
+          "ecr:DescribeRepositories",
+          "ecr:ListRepositories"
         ]
-        Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}-${var.environment}"
+        Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/spotaccount-*"
       }
     ]
   })
@@ -245,16 +248,17 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
           "${aws_s3_bucket.terraform_state.arn}/*"
         ]
       },
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:DescribeTable"
-        ]
-        Resource = aws_dynamodb_table.terraform_locks.arn
-      }
+      # DynamoDB permissions temporarily commented out due to permissions issues
+      # {
+      #   Effect = "Allow"
+      #   Action = [
+      #     "dynamodb:GetItem",
+      #     "dynamodb:PutItem",
+      #     "dynamodb:DeleteItem",
+      #     "dynamodb:DescribeTable"
+      #   ]
+      #   Resource = aws_dynamodb_table.terraform_locks.arn
+      # }
     ]
   })
 }

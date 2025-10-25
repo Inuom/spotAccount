@@ -1,0 +1,550 @@
+openapi: 3.0.3
+info:
+  title: CI/CD Pipeline API
+  description: API for managing CI/CD pipelines and deployments
+  version: 1.0.0
+  contact:
+    name: SpotAccount Team
+    email: team@spotaccount.com
+
+servers:
+  - url: https://api.spotaccount.com
+    description: Production server
+  - url: https://staging-api.spotaccount.com
+    description: Staging server
+
+paths:
+  /pipelines:
+    get:
+      summary: List all pipelines
+      description: Retrieve a list of all CI/CD pipelines
+      tags:
+        - Pipelines
+      parameters:
+        - name: status
+          in: query
+          description: Filter by pipeline status
+          schema:
+            type: string
+            enum: [pending, running, success, failed, cancelled]
+        - name: branch
+          in: query
+          description: Filter by branch name
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of pipelines to return
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: List of pipelines
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pipelines:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Pipeline'
+                  total:
+                    type: integer
+                    description: Total number of pipelines
+                  page:
+                    type: integer
+                    description: Current page number
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Trigger a new pipeline
+      description: Manually trigger a CI/CD pipeline
+      tags:
+        - Pipelines
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - branch
+                - trigger_type
+              properties:
+                branch:
+                  type: string
+                  description: Git branch to deploy
+                  example: "main"
+                trigger_type:
+                  type: string
+                  enum: [manual, push, schedule]
+                  description: Type of trigger
+                environment:
+                  type: string
+                  description: Target environment
+                  default: "production"
+      responses:
+        '201':
+          description: Pipeline created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pipeline'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Pipeline already running for this branch
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /pipelines/{pipelineId}:
+    get:
+      summary: Get pipeline details
+      description: Retrieve detailed information about a specific pipeline
+      tags:
+        - Pipelines
+      parameters:
+        - name: pipelineId
+          in: path
+          required: true
+          description: Pipeline ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pipeline details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pipeline'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Cancel pipeline
+      description: Cancel a running pipeline
+      tags:
+        - Pipelines
+      parameters:
+        - name: pipelineId
+          in: path
+          required: true
+          description: Pipeline ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pipeline cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pipeline'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Pipeline cannot be cancelled in current state
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /deployments:
+    get:
+      summary: List all deployments
+      description: Retrieve a list of all application deployments
+      tags:
+        - Deployments
+      parameters:
+        - name: environment
+          in: query
+          description: Filter by environment
+          schema:
+            type: string
+        - name: application_name
+          in: query
+          description: Filter by application name
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by deployment status
+          schema:
+            type: string
+            enum: [pending, deploying, deployed, failed, rolled_back]
+      responses:
+        '200':
+          description: List of deployments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Deployment'
+                  total:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /deployments/{deploymentId}:
+    get:
+      summary: Get deployment details
+      description: Retrieve detailed information about a specific deployment
+      tags:
+        - Deployments
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          description: Deployment ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deployment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Rollback deployment
+      description: Rollback a deployment to the previous version
+      tags:
+        - Deployments
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          description: Deployment ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rollback initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Deployment cannot be rolled back in current state
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /infrastructure:
+    get:
+      summary: Get infrastructure status
+      description: Retrieve current infrastructure status and resources
+      tags:
+        - Infrastructure
+      responses:
+        '200':
+          description: Infrastructure status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InfrastructureResource'
+                  terraform_state:
+                    $ref: '#/components/schemas/TerraformState'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /health:
+    get:
+      summary: Health check
+      description: Check the health of the CI/CD system
+      tags:
+        - Health
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded, unhealthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        enum: [up, down]
+                      aws:
+                        type: string
+                        enum: [up, down]
+                      github:
+                        type: string
+                        enum: [up, down]
+        '503':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [unhealthy]
+                  errors:
+                    type: array
+                    items:
+                      type: string
+
+components:
+  schemas:
+    Pipeline:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - trigger
+        - branch
+        - started_at
+      properties:
+        id:
+          type: string
+          description: Unique pipeline identifier
+          example: "pipe_1234567890"
+        name:
+          type: string
+          description: Pipeline name
+          example: "production-deploy"
+        status:
+          type: string
+          enum: [pending, running, success, failed, cancelled]
+          description: Current pipeline status
+        trigger:
+          type: string
+          enum: [push, manual, schedule]
+          description: How the pipeline was triggered
+        branch:
+          type: string
+          description: Source branch
+          example: "main"
+        commit_sha:
+          type: string
+          description: Git commit hash
+          example: "abc123def456"
+        started_at:
+          type: string
+          format: date-time
+          description: Pipeline start time
+        completed_at:
+          type: string
+          format: date-time
+          description: Pipeline completion time
+        duration_seconds:
+          type: integer
+          description: Pipeline duration in seconds
+        artifacts:
+          type: array
+          items:
+            type: string
+          description: Build artifacts
+
+    Deployment:
+      type: object
+      required:
+        - id
+        - application_name
+        - version
+        - environment
+        - status
+        - deployed_at
+      properties:
+        id:
+          type: string
+          description: Unique deployment identifier
+          example: "deploy_1234567890"
+        application_name:
+          type: string
+          description: Application name
+          example: "backend"
+        version:
+          type: string
+          description: Application version
+          example: "1.2.3"
+        environment:
+          type: string
+          description: Deployment environment
+          example: "production"
+        infrastructure_id:
+          type: string
+          description: Associated infrastructure ID
+        status:
+          type: string
+          enum: [pending, deploying, deployed, failed, rolled_back]
+          description: Current deployment status
+        deployed_at:
+          type: string
+          format: date-time
+          description: Deployment time
+        health_check_url:
+          type: string
+          format: uri
+          description: Health check endpoint
+        public_url:
+          type: string
+          format: uri
+          description: Public access URL
+
+    InfrastructureResource:
+      type: object
+      required:
+        - id
+        - type
+        - name
+        - status
+        - region
+      properties:
+        id:
+          type: string
+          description: Terraform resource ID
+        type:
+          type: string
+          description: AWS resource type
+          example: "aws_ecs_service"
+        name:
+          type: string
+          description: Resource name
+        status:
+          type: string
+          enum: [pending, created, updated, destroyed, failed]
+          description: Resource status
+        region:
+          type: string
+          description: AWS region
+          example: "eu-west-1"
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+          description: Resource tags
+        created_at:
+          type: string
+          format: date-time
+          description: Creation time
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update time
+
+    TerraformState:
+      type: object
+      required:
+        - id
+        - workspace
+        - backend
+        - resources_count
+        - last_updated
+      properties:
+        id:
+          type: string
+          description: State identifier
+        workspace:
+          type: string
+          description: Terraform workspace
+        backend:
+          type: string
+          description: Backend type
+          example: "s3"
+        backend_config:
+          type: object
+          description: Backend configuration
+        resources_count:
+          type: integer
+          description: Number of managed resources
+        last_updated:
+          type: string
+          format: date-time
+          description: Last state update
+        terraform_version:
+          type: string
+          description: Terraform version
+        state_file_hash:
+          type: string
+          description: State file checksum
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INVALID_REQUEST"
+            message: "Invalid request parameters"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "Resource not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INTERNAL_ERROR"
+            message: "An internal error occurred"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

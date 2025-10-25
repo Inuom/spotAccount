@@ -18,7 +18,7 @@ variable "environment" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-west-1"
 }
 
 # availability_zones is now derived from data.aws_availability_zones.available.names
@@ -135,6 +135,13 @@ variable "app_health_check_path" {
   description = "Health check path for the application"
   type        = string
   default     = "/healthz"
+}
+
+# GitHub Configuration
+variable "github_repository" {
+  description = "GitHub repository for CI/CD (format: owner/repo)"
+  type        = string
+  default     = "Inuom/spotaccount"
 }
 
 # Tags

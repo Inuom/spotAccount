@@ -59,13 +59,10 @@ resource "aws_ecs_task_definition" "main" {
         {
           name  = "PORT"
           value = tostring(var.app_port)
-        }
-      ]
-      
-      secrets = [
+        },
         {
-          name      = "DATABASE_URL"
-          valueFrom = aws_ssm_parameter.database_url.arn
+          name  = "DATABASE_URL"
+          value = "postgresql://${aws_db_instance.main.username}:${random_password.db_password.result}@${aws_db_instance.main.endpoint}:${aws_db_instance.main.port}/${aws_db_instance.main.db_name}"
         }
       ]
       
@@ -97,19 +94,13 @@ resource "aws_ecs_service" "main" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = module.vpc.private_subnets
+    subnets          = module.vpc.public_subnets
     security_groups  = [aws_security_group.ecs.id]
-    assign_public_ip = false
+    assign_public_ip = true
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.main.arn
-    container_name   = "${var.project_name}-${var.environment}-container"
-    container_port   = var.app_port
-  }
 
   depends_on = [
-    aws_lb_listener.main,
     aws_iam_role_policy_attachment.ecs_task_execution
   ]
 
@@ -119,16 +110,11 @@ resource "aws_ecs_service" "main" {
   })
 }
 
-# SSM Parameter for Database URL
-resource "aws_ssm_parameter" "database_url" {
-  name  = "/${var.project_name}/${var.environment}/database/url"
-  type  = "SecureString"
-  value = "postgresql://${aws_db_instance.main.username}:${random_password.db_password.result}@${aws_db_instance.main.endpoint}:${aws_db_instance.main.port}/${aws_db_instance.main.db_name}"
+# SSM Parameter for Database URL - Temporarily commented out due to permissions issues
+# resource "aws_ssm_parameter" "database_url" {
+#   name  = "/${var.project_name}/${var.environment}/database/url"
+#   type  = "SecureString"
+#   value = "postgresql://${aws_db_instance.main.username}:${random_password.db_password.result}@${aws_db_instance.main.endpoint}:${aws_db_instance.main.port}/${aws_db_instance.main.db_name}"
+# }
 
-  tags = merge(var.common_tags, {
-    Name        = "${var.project_name}-${var.environment}-database-url"
-    Purpose     = "database-connection"
-  })
-}
-
-te# Random password for database is defined in rds.tf
+# Random password for database is defined in rds.tf

@@ -3,7 +3,7 @@
 
 # ECR Repository for Backend
 resource "aws_ecr_repository" "backend" {
-  name                 = "${var.project_name}-${var.environment}-backend"
+  name                 = "spotaccount-backend"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -12,6 +12,11 @@ resource "aws_ecr_repository" "backend" {
 
   encryption_configuration {
     encryption_type = "AES256"
+  }
+
+  # Prevent accidental deletion of ECR repository
+  lifecycle {
+    prevent_destroy = true
   }
 
   tags = {

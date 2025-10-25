@@ -14,6 +14,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-18
 - PostgreSQL with Prisma ORM for data persistence and migrations (001-shared-subscription-spec)
 - Node.js 18+, TypeScript, Terraform 1.5+, YAML (GitHub Actions) + GitHub Actions, AWS CLI, Docker, Terraform, AWS ECS/Fargate, AWS RDS PostgreSQL, AWS S3, AWS CloudFront (002-cicd-aws-terraform)
 - AWS RDS PostgreSQL with automated backups and point-in-time recovery (002-cicd-aws-terraform)
+- TypeScript/Node.js (backend), TypeScript/Angular (frontend) + NestJS, Angular, Terraform, AWS SDK, Docker (master)
+- PostgreSQL (RDS), S3 (static assets) (master)
 
 ## Project Structure
 ```
@@ -29,9 +31,9 @@ npm test; npm run lint
 Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions
 
 ## Recent Changes
+- master: Added TypeScript/Node.js (backend), TypeScript/Angular (frontend) + NestJS, Angular, Terraform, AWS SDK, Docker
 - 002-cicd-aws-terraform: Added Node.js 18+, TypeScript, Terraform 1.5+, YAML (GitHub Actions) + GitHub Actions, AWS CLI, Docker, Terraform, AWS ECS/Fargate, AWS RDS PostgreSQL, AWS S3, AWS CloudFront
 - 002-cicd-aws-terraform: Added Node.js 18+, TypeScript, Terraform 1.5+, YAML (GitHub Actions) + GitHub Actions, AWS CLI, Docker, Terraform, AWS ECS/Fargate, AWS RDS PostgreSQL, AWS S3, AWS CloudFront
-- 001-shared-subscription-spec: Added TypeScript 5.0+, Node.js 18+ (LTS), Angular 17+ + NestJS, Prisma ORM, PostgreSQL, NgRx, Angular Material
 
 ## Code Style
 Node.js 18+ (backend), TypeScript 5+ (frontend): Follow standard conventions

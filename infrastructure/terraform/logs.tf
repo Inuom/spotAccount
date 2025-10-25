@@ -25,17 +25,7 @@ resource "aws_cloudwatch_log_group" "ecs_tasks" {
   }
 }
 
-# CloudWatch Log Group for Load Balancer
-resource "aws_cloudwatch_log_group" "alb" {
-  name              = "/aws/applicationloadbalancer/${var.project_name}-${var.environment}"
-  retention_in_days = 7
-
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-alb-logs"
-    Environment = var.environment
-    Purpose     = "alb-logs"
-  }
-}
+# ALB log group removed for infrastructure simplification
 
 # CloudWatch Log Group for RDS
 resource "aws_cloudwatch_log_group" "rds" {

@@ -14,6 +14,11 @@
 - Q: How should CI/CD pipeline timeouts be handled? → A: Fail immediately and alert for manual intervention
 - Q: How should sensitive configuration values and API keys be managed? → A: Store secrets as encrypted environment variables in CI/CD (easier approach)
 - Q: How should simultaneous deployments to the same environment be handled? → A: Block concurrent deployments to same environment
+- Q: How should the backend service be exposed for access? → A: Simple ECS with public IP directly (no ALB)
+- Q: How should security be configured for public ECS access? → A: Basic security groups with HTTPS only and standard AWS security practices
+- Q: How should the RDS database be configured for access? → A: RDS with public access for maximum simplicity
+- Q: What level of monitoring and observability is needed? → A: Minimal logging with application-level monitoring only
+- Q: How should application updates be handled? → A: No zero-downtime requirements to keep infrastructure simple
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -100,10 +105,10 @@ A developer can deploy the application to production AWS environment using the C
 - **FR-008**: The system MUST implement secret management using encrypted environment variables in CI/CD for database credentials, API keys, and other sensitive configuration.
 - **FR-009**: The CI/CD pipeline MUST include health checks and automatic rollback capabilities for failed deployments.
 - **FR-010**: The system MUST configure CloudFront distribution for frontend assets with appropriate caching headers and HTTPS enforcement.
-- **FR-011**: The infrastructure MUST implement proper network security with VPC, subnets, and security groups restricting access appropriately.
-- **FR-012**: The system MUST implement logging and monitoring for application and infrastructure health visibility.
+- **FR-011**: The infrastructure MUST implement basic network security with VPC, public subnets, and security groups allowing HTTPS access only.
+- **FR-012**: The system MUST implement minimal application-level logging for basic health visibility.
 - **FR-013**: The CI/CD pipeline MUST run database migrations automatically as part of the deployment process.
-- **FR-014**: The system MUST support blue-green deployments for zero-downtime updates of the backend service.
+- **FR-014**: The system MUST support simple stop-and-start deployments with brief downtime for infrastructure simplicity.
 - **FR-015**: The CI/CD pipeline MUST implement timeout limits for builds and deployments, failing immediately and alerting operators when exceeded.
 - **FR-016**: The CI/CD pipeline MUST block concurrent deployments to the same environment to prevent conflicts and ensure deployment integrity.
 
@@ -111,12 +116,12 @@ A developer can deploy the application to production AWS environment using the C
 
 - **INF-001**: All AWS resources MUST be defined using Terraform for infrastructure as code and version control.
 - **INF-002**: The infrastructure MUST use AWS Fargate for backend hosting to eliminate server management overhead.
-- **INF-003**: The infrastructure MUST use AWS RDS PostgreSQL with automated backups and Multi-AZ deployment for production.
+- **INF-003**: The infrastructure MUST use AWS RDS PostgreSQL with public access, automated backups, and single-AZ deployment for simplicity.
 - **INF-004**: The infrastructure MUST use S3 for static frontend hosting with CloudFront CDN for performance.
 - **INF-005**: The infrastructure MUST implement proper IAM roles and policies following least privilege principles.
 - **INF-006**: The infrastructure MUST support secret management through CI/CD encrypted environment variables for database credentials and application secrets.
 - **INF-007**: The infrastructure MUST implement VPC with public and private subnets for proper network isolation.
-- **INF-008**: The infrastructure MUST configure Application Load Balancer for backend traffic distribution and SSL termination.
+- **INF-008**: The infrastructure MUST configure ECS service with public IP for direct access without load balancer complexity.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -132,5 +137,5 @@ A developer can deploy the application to production AWS environment using the C
 - **SC-001**: Complete CI/CD pipeline executes from code push to production deployment in under 15 minutes.
 - **SC-002**: Infrastructure provisioning via Terraform completes successfully in production environment within 10 minutes.
 - **SC-003**: 99% of CI/CD pipeline runs complete without manual intervention or failure.
-- **SC-004**: Application deploys with zero downtime 95% of the time for production updates.
+- **SC-004**: Application deploys successfully with brief downtime acceptable for simple infrastructure updates.
 - **SC-005**: Infrastructure changes are applied consistently in production environment with 100% accuracy.
