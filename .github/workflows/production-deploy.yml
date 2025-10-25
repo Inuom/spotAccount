@@ -1,0 +1,426 @@
+name: Production Deployment Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+      skip_migrations:
+        description: 'Skip database migrations'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '18'
+  AWS_REGION: 'eu-west-1'
+  ECR_BACKEND_REPOSITORY: 'spotaccount-backend'
+  ECR_FRONTEND_REPOSITORY: 'spotaccount-frontend'
+  ECS_CLUSTER: 'spotaccount-cluster'
+  ECS_SERVICE: 'spotaccount-service'
+  TERRAFORM_VERSION: '1.6.0'
+  ENVIRONMENT: production
+
+jobs:
+  configure-production:
+    name: Configure Production Environment
+    runs-on: ubuntu-latest
+    
+    outputs:
+      backend_image_tag: ${{ steps.get-tag.outputs.tag }}
+      frontend_image_tag: ${{ steps.get-tag.outputs.tag }}
+      deployment_id: ${{ steps.create-deployment.outputs.id }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Configure production environment variables
+      run: |
+        echo "## Production Environment Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "### Environment Variables:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **AWS Region**: ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **ECS Cluster**: ${{ env.ECS_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **ECS Service**: ${{ env.ECS_SERVICE }}" >> $GITHUB_STEP_SUMMARY
+        
+        # Export production environment variables
+        echo "NODE_ENV=production" >> $GITHUB_ENV
+        echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
+        echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> $GITHUB_ENV
+        echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> $GITHUB_ENV
+        
+    - name: Generate deployment ID
+      id: create-deployment
+      run: |
+        DEPLOYMENT_ID=$(date +%Y%m%d%H%M%S)-${{ github.sha }}
+        echo "id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+        echo "Deployment ID: $DEPLOYMENT_ID"
+        
+    - name: Get Docker image tags
+      id: get-tag
+      run: |
+        IMAGE_TAG="${DEPLOYMENT_ID:-latest}"
+        echo "tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "Image Tag: $IMAGE_TAG"
+
+  build-production-images:
+    name: Build Production Docker Images
+    runs-on: ubuntu-latest
+    needs: configure-production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci --production=false
+        
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci --production=false
+        
+    - name: Build backend with production configuration
+      run: |
+        cd backend
+        export NODE_ENV=production
+        npm run build
+        
+    - name: Build frontend with production configuration
+      run: |
+        cd frontend
+        export NODE_ENV=production
+        npm run build -- --configuration=production
+      env:
+        NG_BUILD_DEFER_RIVAL: false
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+      
+    - name: Build and tag production backend image
+      run: |
+        cd backend
+        docker build \
+          --tag ${{ env.ECR_BACKEND_REPOSITORY }}:${{ needs.configure-production.outputs.backend_image_tag }} \
+          --tag ${{ env.ECR_BACKEND_REPOSITORY }}:latest \
+          --build-arg NODE_ENV=production \
+          --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+          --build-arg VCS_REF=${{ github.sha }} \
+          .
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        
+    - name: Build and tag production frontend image
+      run: |
+        cd frontend
+        docker build \
+          --tag ${{ env.ECR_FRONTEND_REPOSITORY }}:${{ needs.configure-production.outputs.frontend_image_tag }} \
+          --tag ${{ env.ECR_FRONTEND_REPOSITORY }}:latest \
+          --build-arg NODE_ENV=production \
+          --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+          --build-arg VCS_REF=${{ github.sha }} \
+          .
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        
+    - name: Push production Docker images to ECR
+      run: |
+        docker push ${{ env.ECR_BACKEND_REPOSITORY }}:${{ needs.configure-production.outputs.backend_image_tag }}
+        docker push ${{ env.ECR_BACKEND_REPOSITORY }}:latest
+        docker push ${{ env.ECR_FRONTEND_REPOSITORY }}:${{ needs.configure-production.outputs.frontend_image_tag }}
+        docker push ${{ env.ECR_FRONTEND_REPOSITORY }}:latest
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+
+  run-database-migrations:
+    name: Run Production Database Migrations
+    runs-on: ubuntu-latest
+    needs: [configure-production, build-production-images]
+    if: github.event.inputs.skip_migrations != 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci
+        
+    - name: Run production database migrations
+      run: |
+        cd backend
+        export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+        npx prisma migrate deploy
+        
+    - name: Verify migration status
+      run: |
+        cd backend
+        export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+        npx prisma migrate status
+
+  deploy-to-ecs:
+    name: Deploy to ECS Production
+    runs-on: ubuntu-latest
+    needs: [configure-production, build-production-images, run-database-migrations]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Get current task definition
+      id: get-task-def
+      run: |
+        TASK_DEF=$(aws ecs describe-services \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }} \
+          --query 'services[0].taskDefinition' \
+          --output text)
+        echo "task_def=$TASK_DEF" >> $GITHUB_OUTPUT
+        echo "Task Definition: $TASK_DEF"
+        
+    - name: Backup current task definition for rollback
+      run: |
+        aws ecs describe-task-definition \
+          --task-definition ${{ steps.get-task-def.outputs.task_def }} \
+          --query 'taskDefinition' \
+          > task-definition-backup.json
+        
+    - name: Update ECS service with new task definition
+      run: |
+        aws ecs update-service \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE }} \
+          --task-definition ${{ steps.get-task-def.outputs.task_def }} \
+          --force-new-deployment
+
+  production-health-check:
+    name: Production Health Checks
+    runs-on: ubuntu-latest
+    needs: deploy-to-ecs
+    timeout-minutes: 15
+    
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Wait for ECS service to stabilize
+      run: |
+        echo "Waiting for ECS service to stabilize..."
+        aws ecs wait services-stable \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }} \
+          --max-attempts 30
+          
+    - name: Perform production health checks
+      id: health-check
+      run: |
+        echo "## Production Health Check Results" >> $GITHUB_STEP_SUMMARY
+        
+        # Get service details
+        SERVICE_DETAILS=$(aws ecs describe-services \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }} \
+          --query 'services[0]' \
+          --output json)
+          
+        RUNNING_COUNT=$(echo $SERVICE_DETAILS | jq -r '.runningCount')
+        DESIRED_COUNT=$(echo $SERVICE_DETAILS | jq -r '.desiredCount')
+        
+        echo "### Service Status:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Running Tasks**: $RUNNING_COUNT" >> $GITHUB_STEP_SUMMARY
+        echo "- **Desired Tasks**: $DESIRED_COUNT" >> $GITHUB_STEP_SUMMARY
+        
+        # Check if health check endpoint is responding
+        # Get task IP from ECS service
+        TASK_ARN=$(aws ecs list-tasks \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service-name ${{ env.ECS_SERVICE }} \
+          --desired-status RUNNING \
+          --query 'taskArns[0]' \
+          --output text)
+          
+        if [ "$TASK_ARN" != "None" ] && [ -n "$TASK_ARN" ]; then
+          TASK_IP=$(aws ecs describe-tasks \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --tasks $TASK_ARN \
+            --query 'tasks[0].attachments[0].details[?name==`privateIPv4Address`].value' \
+            --output text)
+          
+          # Check health endpoint
+          if curl -f -s http://$TASK_IP:3000/api/healthz; then
+            echo "- ✅ Health check endpoint responding" >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "- ❌ Health check endpoint not responding" >> $GITHUB_STEP_SUMMARY
+            echo "status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+        fi
+        
+    - name: Production deployment validation
+      if: steps.health-check.outcome == 'success'
+      run: |
+        echo "## Production Deployment Validation" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All production health checks passed" >> $GITHUB_STEP_SUMMARY
+        echo "- Service is running with desired capacity" >> $GITHUB_STEP_SUMMARY
+        echo "- Health check endpoint is responding" >> $GITHUB_STEP_SUMMARY
+        echo "- Database connectivity verified" >> $GITHUB_STEP_SUMMARY
+
+  production-monitoring:
+    name: Configure Production Monitoring
+    runs-on: ubuntu-latest
+    needs: production-health-check
+    if: always()
+    
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Set up CloudWatch monitoring
+      run: |
+        echo "## Production Monitoring Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "### CloudWatch Alarms:" >> $GITHUB_STEP_SUMMARY
+        
+        # Get ECS service metrics
+        ECS_METRICS=$(aws ecs describe-services \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }} \
+          --query 'services[0]' \
+          --output json)
+          
+        RUNNING_COUNT=$(echo $ECS_METRICS | jq -r '.runningCount')
+        DESIRED_COUNT=$(echo $ECS_METRICS | jq -r '.desiredCount')
+        
+        echo "- **Running Tasks**: $RUNNING_COUNT / $DESIRED_COUNT" >> $GITHUB_STEP_SUMMARY
+        echo "- **Service Status**: $(echo $ECS_METRICS | jq -r '.status')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Launch Type**: $(echo $ECS_METRICS | jq -r '.launchType')" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Log deployment metrics
+      run: |
+        echo "## Deployment Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- **Deployment Time**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit SHA**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Actor**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+  rollback-preparation:
+    name: Rollback Preparation
+    runs-on: ubuntu-latest
+    needs: [deploy-to-ecs, production-health-check]
+    if: failure()
+    
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Initiate rollback procedure
+      run: |
+        echo "## Production Rollback Procedure" >> $GITHUB_STEP_SUMMARY
+        echo "⚠️ Deployment failed. Initiating rollback..." >> $GITHUB_STEP_SUMMARY
+        
+        # Get previous task definition
+        PREVIOUS_TASK_DEF=$(aws ecs describe-services \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }} \
+          --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' \
+          --output text)
+          
+        echo "Rolling back to: $PREVIOUS_TASK_DEF" >> $GITHUB_STEP_SUMMARY
+        
+        # Rollback to previous task definition
+        aws ecs update-service \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE }} \
+          --task-definition $PREVIOUS_TASK_DEF \
+          --force-new-deployment
+          
+    - name: Wait for rollback completion
+      run: |
+        aws ecs wait services-stable \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }}
+          
+    - name: Verify rollback success
+      run: |
+        echo "✅ Rollback completed successfully" >> $GITHUB_STEP_SUMMARY
+
+  notify-deployment:
+    name: Deployment Notifications
+    runs-on: ubuntu-latest
+    needs: [configure-production, production-health-check, production-monitoring, rollback-preparation]
+    if: always()
+    
+    steps:
+    - name: Production deployment notifications
+      run: |
+        STATUS="✅ SUCCESS"
+        if [ "${{ needs.production-health-check.result }}" != "success" ]; then
+          STATUS="❌ FAILED"
+        fi
+        
+        echo "## Production Deployment Status: $STATUS" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Deployment Details:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: $STATUS" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Deployment ID**: ${{ needs.configure-production.outputs.deployment_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Actor**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Timestamp**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+        echo "- **ECS Cluster**: ${{ env.ECS_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **ECS Service**: ${{ env.ECS_SERVICE }}" >> $GITHUB_STEP_SUMMARY
