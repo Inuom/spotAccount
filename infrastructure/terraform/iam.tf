@@ -207,25 +207,25 @@ resource "aws_iam_role_policy" "github_actions_s3" {
 }
 
 # GitHub Actions Policy for CloudFront
-resource "aws_iam_role_policy" "github_actions_cloudfront" {
-  name = "${var.project_name}-${var.environment}-github-actions-cloudfront-policy"
-  role = aws_iam_role.github_actions.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "cloudfront:CreateInvalidation",
-          "cloudfront:GetInvalidation",
-          "cloudfront:ListInvalidations"
-        ]
-        Resource = aws_cloudfront_distribution.frontend.arn
-      }
-    ]
-  })
-}
+# resource "aws_iam_role_policy" "github_actions_cloudfront" {
+#   name = "${var.project_name}-${var.environment}-github-actions-cloudfront-policy"
+#   role = aws_iam_role.github_actions.id
+# 
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect = "Allow"
+#         Action = [
+#           "cloudfront:CreateInvalidation",
+#           "cloudfront:GetInvalidation",
+#           "cloudfront:ListInvalidations"
+#         ]
+#         Resource = aws_cloudfront_distribution.frontend.arn
+#       }
+#     ]
+#   })
+# }
 
 # GitHub Actions Policy for Terraform State
 resource "aws_iam_role_policy" "github_actions_terraform" {

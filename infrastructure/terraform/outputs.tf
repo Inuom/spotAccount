@@ -72,20 +72,20 @@ output "s3_bucket_domain_name" {
 }
 
 # CloudFront Outputs
-output "cloudfront_distribution_id" {
-  description = "ID of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.frontend.id
-}
+# output "cloudfront_distribution_id" {
+#   description = "ID of the CloudFront distribution"
+#   value       = aws_cloudfront_distribution.frontend.id
+# }
 
-output "cloudfront_domain_name" {
-  description = "Domain name of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.frontend.domain_name
-}
+# output "cloudfront_domain_name" {
+#   description = "Domain name of the CloudFront distribution"
+#   value       = aws_cloudfront_distribution.frontend.domain_name
+# }
 
-output "cloudfront_hosted_zone_id" {
-  description = "Hosted zone ID of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.frontend.hosted_zone_id
-}
+# output "cloudfront_hosted_zone_id" {
+#   description = "Hosted zone ID of the CloudFront distribution"
+#   value       = aws_cloudfront_distribution.frontend.hosted_zone_id
+# }
 
 # ALB configuration removed for infrastructure simplification
 

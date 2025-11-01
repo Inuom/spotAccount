@@ -187,6 +187,7 @@ jobs:
     - name: Deploy infrastructure with Terraform
       run: |
         cd infrastructure/terraform
+        ls -la
         # Initialize Terraform with S3 backend
         terraform init \
           -backend-config="bucket=${{ secrets.TERRAFORM_BACKEND_BUCKET }}" \
