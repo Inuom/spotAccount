@@ -183,7 +183,15 @@ jobs:
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: ${{ env.TERRAFORM_VERSION }}
-        
+    - name: Create production.tfvars from secrets
+      run: |
+        cd infrastructure/terraform
+        cat > production.tfvars << EOF
+        # ... other variables ...
+        db_password = "${{ secrets.TF_VAR_DB_PASSWORD }}"
+        EOF
+      env:
+        TF_VAR_DB_PASSWORD: ${{ secrets.TF_VAR_DB_PASSWORD }}
     - name: Deploy infrastructure with Terraform
       run: |
         cd infrastructure/terraform
