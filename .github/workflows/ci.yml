@@ -222,27 +222,27 @@ jobs:
           cd infrastructure/terraform
           terraform plan 
 
-#      - name: Terraform Apply
-#        run: |
-#          cd infrastructure/terraform
-#          terraform apply -auto-approve 
-#
-#      - name: Deploy application to ECS
-#        run: |
-#          # Update ECS service with new task definition
-#          aws ecs update-service \
-#            --cluster ${{ env.ECS_CLUSTER }} \
-#            --service ${{ env.ECS_SERVICE }} \
-#            --force-new-deployment
-#
-#      - name: Wait for deployment to complete
-#        run: |
-#          aws ecs wait services-stable \
-#            --cluster ${{ env.ECS_CLUSTER }} \
-#            --services ${{ env.ECS_SERVICE }}
-#
-#      - name: Health check
-#        run: |
-#          # Get ALB DNS name from Terraform output
-#          ALB_DNS=$(cd infrastructure/terraform && terraform output -raw alb_dns_name)
-#          curl -f http://$ALB_DNS/healthz || exit 1
+      - name: Terraform Apply
+        run: |
+          cd infrastructure/terraform
+          terraform apply -auto-approve 
+
+      - name: Deploy application to ECS
+        run: |
+          # Update ECS service with new task definition
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --force-new-deployment
+
+      - name: Wait for deployment to complete
+        run: |
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }}
+
+      - name: Health check
+        run: |
+          # Get ALB DNS name from Terraform output
+          ALB_DNS=$(cd infrastructure/terraform && terraform output -raw alb_dns_name)
+          curl -f http://$ALB_DNS/healthz || exit 1
