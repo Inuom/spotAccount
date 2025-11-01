@@ -27,7 +27,6 @@ env:
 jobs:
   test:
     name: Test and Quality Checks
-    if: false
     runs-on: ubuntu-latest
 
     steps:
