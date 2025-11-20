@@ -1,0 +1,246 @@
+name: EC2 Production Deployment
+
+# Feature: simplify-aws-to-ec2
+# Simplified deployment workflow for EC2 instance
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment even without changes'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  AWS_REGION: 'eu-west-1'
+  NODE_VERSION: '18'
+  ECR_BACKEND_REPOSITORY: 'spotaccount-backend'
+  ECR_FRONTEND_REPOSITORY: 'spotaccount-frontend'
+  EC2_USER: 'ec2-user'
+  EC2_APP_DIR: '/opt/spotaccount'
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    
+    outputs:
+      backend_image: ${{ steps.image-tags.outputs.backend_image }}
+      frontend_image: ${{ steps.image-tags.outputs.frontend_image }}
+      image_tag: ${{ steps.image-tags.outputs.tag }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+      
+    - name: Generate image tags
+      id: image-tags
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        IMAGE_TAG="${GITHUB_SHA:0:8}-$(date +%Y%m%d%H%M%S)"
+        echo "tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "backend_image=$ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "frontend_image=$ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "### Image Tags" >> $GITHUB_STEP_SUMMARY
+        echo "- Backend: \`$ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Frontend: \`$ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG\`" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: |
+          backend/package-lock.json
+          frontend/package-lock.json
+        
+    - name: Build backend
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tags.outputs.tag }}
+      run: |
+        cd backend
+        docker build \
+          --tag $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG \
+          --tag $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:latest \
+          --build-arg NODE_ENV=production \
+          .
+        
+    - name: Build frontend
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tags.outputs.tag }}
+      run: |
+        cd frontend
+        docker build \
+          --tag $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG \
+          --tag $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:latest \
+          --build-arg NODE_ENV=production \
+          .
+        
+    - name: Push images to ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tags.outputs.tag }}
+      run: |
+        docker push $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:latest
+        docker push $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:latest
+        echo "✅ Images pushed successfully" >> $GITHUB_STEP_SUMMARY
+
+  deploy-to-ec2:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Get EC2 instance details
+      id: ec2-info
+      run: |
+        INSTANCE_ID=$(aws ec2 describe-instances \
+          --filters "Name=tag:Name,Values=spotaccount-production-ec2" "Name=instance-state-name,Values=running" \
+          --query 'Reservations[0].Instances[0].InstanceId' \
+          --output text)
+        
+        if [ "$INSTANCE_ID" == "None" ] || [ -z "$INSTANCE_ID" ]; then
+          echo "❌ EC2 instance not found or not running" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        
+        PUBLIC_IP=$(aws ec2 describe-instances \
+          --instance-ids $INSTANCE_ID \
+          --query 'Reservations[0].Instances[0].PublicIpAddress' \
+          --output text)
+        
+        echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+        echo "public_ip=$PUBLIC_IP" >> $GITHUB_OUTPUT
+        echo "### EC2 Instance" >> $GITHUB_STEP_SUMMARY
+        echo "- Instance ID: \`$INSTANCE_ID\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Public IP: \`$PUBLIC_IP\`" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/ec2_key
+        chmod 600 ~/.ssh/ec2_key
+        ssh-keyscan -H ${{ steps.ec2-info.outputs.public_ip }} >> ~/.ssh/known_hosts
+        
+    - name: Copy deployment files to EC2
+      env:
+        EC2_HOST: ${{ steps.ec2-info.outputs.public_ip }}
+      run: |
+        # Copy docker-compose configuration
+        scp -i ~/.ssh/ec2_key docker-compose.prod.yml $EC2_USER@$EC2_HOST:$EC2_APP_DIR/
+        
+        # Copy nginx configuration
+        scp -i ~/.ssh/ec2_key -r nginx $EC2_USER@$EC2_HOST:$EC2_APP_DIR/
+        
+        # Copy deployment script
+        scp -i ~/.ssh/ec2_key scripts/deploy-ec2.sh $EC2_USER@$EC2_HOST:$EC2_APP_DIR/scripts/
+        chmod +x $EC2_USER@$EC2_HOST:$EC2_APP_DIR/scripts/deploy-ec2.sh || true
+        
+    - name: Update environment variables on EC2
+      env:
+        EC2_HOST: ${{ steps.ec2-info.outputs.public_ip }}
+        BACKEND_IMAGE: ${{ needs.build-and-push.outputs.backend_image }}
+        FRONTEND_IMAGE: ${{ needs.build-and-push.outputs.frontend_image }}
+      run: |
+        ssh -i ~/.ssh/ec2_key $EC2_USER@$EC2_HOST << 'EOF'
+        cd ${{ env.EC2_APP_DIR }}
+        
+        # Update image tags in environment file
+        sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}|" .env.production
+        sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}|" .env.production
+        
+        echo "✅ Environment variables updated"
+        EOF
+        
+    - name: Deploy application on EC2
+      env:
+        EC2_HOST: ${{ steps.ec2-info.outputs.public_ip }}
+      run: |
+        ssh -i ~/.ssh/ec2_key $EC2_USER@$EC2_HOST << 'EOF'
+        cd ${{ env.EC2_APP_DIR }}
+        
+        # Run deployment script
+        bash scripts/deploy-ec2.sh
+        EOF
+        
+    - name: Verify deployment
+      env:
+        EC2_HOST: ${{ steps.ec2-info.outputs.public_ip }}
+      run: |
+        # Wait a bit for services to start
+        sleep 10
+        
+        # Check health endpoint
+        MAX_ATTEMPTS=30
+        ATTEMPT=0
+        while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+          if curl -f -s http://$EC2_HOST/healthz > /dev/null; then
+            echo "✅ Health check passed" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          ATTEMPT=$((ATTEMPT+1))
+          sleep 2
+        done
+        
+        echo "❌ Health check failed after $MAX_ATTEMPTS attempts" >> $GITHUB_STEP_SUMMARY
+        exit 1
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        rm -f ~/.ssh/ec2_key
+
+  post-deployment:
+    name: Post-Deployment Tasks
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-to-ec2]
+    if: always()
+    
+    steps:
+    - name: Deployment summary
+      run: |
+        if [ "${{ needs.deploy-to-ec2.result }}" == "success" ]; then
+          echo "## ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Details:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: Success" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend Image**: ${{ needs.build-and-push.outputs.backend_image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend Image**: ${{ needs.build-and-push.outputs.frontend_image }}" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please check the logs for details." >> $GITHUB_STEP_SUMMARY
+        fi
+

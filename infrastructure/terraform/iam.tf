@@ -1,37 +1,9 @@
 # IAM Roles and Policies
-# Feature: 002-cicd-aws-terraform
+# Feature: simplify-aws-to-ec2
 
-# ECS Task Execution Role
-resource "aws_iam_role" "ecs_task_execution" {
-  name = "${var.project_name}-${var.environment}-ecs-task-execution-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-ecs-task-execution-role"
-  }
-}
-
-# Attach AWS managed policy for ECS task execution
-resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
-  role       = aws_iam_role.ecs_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-# ECS Task Role
-resource "aws_iam_role" "ecs_task" {
-  name = "${var.project_name}-${var.environment}-ecs-task-role"
+# EC2 Instance Role
+resource "aws_iam_role" "ec2" {
+  name = "${var.project_name}-${var.environment}-ec2-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -40,21 +12,53 @@ resource "aws_iam_role" "ecs_task" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "ecs-tasks.amazonaws.com"
+          Service = "ec2.amazonaws.com"
         }
       }
     ]
   })
 
-  tags = {
-    Name = "${var.project_name}-${var.environment}-ecs-task-role"
-  }
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-${var.environment}-ec2-role"
+  })
 }
 
-# ECS Task Role Policy for CloudWatch Logs
-resource "aws_iam_role_policy" "ecs_task_logs" {
-  name = "${var.project_name}-${var.environment}-ecs-task-logs-policy"
-  role = aws_iam_role.ecs_task.id
+# Instance Profile for EC2
+resource "aws_iam_instance_profile" "ec2" {
+  name = "${var.project_name}-${var.environment}-ec2-profile"
+  role = aws_iam_role.ec2.name
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-${var.environment}-ec2-profile"
+  })
+}
+
+# EC2 Role Policy for ECR (pull Docker images)
+resource "aws_iam_role_policy" "ec2_ecr" {
+  name = "${var.project_name}-${var.environment}-ec2-ecr-policy"
+  role = aws_iam_role.ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# EC2 Role Policy for CloudWatch Logs
+resource "aws_iam_role_policy" "ec2_cloudwatch" {
+  name = "${var.project_name}-${var.environment}-ec2-cloudwatch-policy"
+  role = aws_iam_role.ec2.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -67,26 +71,7 @@ resource "aws_iam_role_policy" "ecs_task_logs" {
           "logs:PutLogEvents",
           "logs:DescribeLogStreams"
         ]
-        Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/ecs/${var.project_name}-${var.environment}*"
-      }
-    ]
-  })
-}
-
-# ECS Task Role Policy for RDS access
-resource "aws_iam_role_policy" "ecs_task_rds" {
-  name = "${var.project_name}-${var.environment}-ecs-task-rds-policy"
-  role = aws_iam_role.ecs_task.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "rds-db:connect"
-        ]
-        Resource = "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.main.db_name}/*"
+        Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/ec2/${var.project_name}-${var.environment}*"
       }
     ]
   })
@@ -122,7 +107,7 @@ resource "aws_iam_role" "github_actions" {
   }
 }
 
-# GitHub Actions Policy for ECR
+# GitHub Actions Policy for ECR (push Docker images)
 resource "aws_iam_role_policy" "github_actions_ecr" {
   name = "${var.project_name}-${var.environment}-github-actions-ecr-policy"
   role = aws_iam_role.github_actions.id
@@ -156,76 +141,6 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
     ]
   })
 }
-
-# GitHub Actions Policy for ECS
-resource "aws_iam_role_policy" "github_actions_ecs" {
-  name = "${var.project_name}-${var.environment}-github-actions-ecs-policy"
-  role = aws_iam_role.github_actions.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecs:UpdateService",
-          "ecs:DescribeServices",
-          "ecs:DescribeTaskDefinition",
-          "ecs:RegisterTaskDefinition",
-          "ecs:ListTasks",
-          "ecs:DescribeTasks"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# GitHub Actions Policy for S3
-resource "aws_iam_role_policy" "github_actions_s3" {
-  name = "${var.project_name}-${var.environment}-github-actions-s3-policy"
-  role = aws_iam_role.github_actions.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.frontend.arn,
-          "${aws_s3_bucket.frontend.arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
-# GitHub Actions Policy for CloudFront
-# resource "aws_iam_role_policy" "github_actions_cloudfront" {
-#   name = "${var.project_name}-${var.environment}-github-actions-cloudfront-policy"
-#   role = aws_iam_role.github_actions.id
-# 
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect = "Allow"
-#         Action = [
-#           "cloudfront:CreateInvalidation",
-#           "cloudfront:GetInvalidation",
-#           "cloudfront:ListInvalidations"
-#         ]
-#         Resource = aws_cloudfront_distribution.frontend.arn
-#       }
-#     ]
-#   })
-# }
 
 # GitHub Actions Policy for Terraform State
 resource "aws_iam_role_policy" "github_actions_terraform" {
