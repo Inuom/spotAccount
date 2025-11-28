@@ -147,23 +147,82 @@ jobs:
     - name: Setup SSH key
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/ec2_key
+        chmod 700 ~/.ssh
+        
+        # Write SSH private key with proper formatting
+        # Remove any leading/trailing whitespace and ensure proper line endings
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' > ~/.ssh/ec2_key
         chmod 600 ~/.ssh/ec2_key
-        ssh-keyscan -H ${{ steps.ec2-info.outputs.public_ip }} >> ~/.ssh/known_hosts
+        
+        # Add EC2 host to known_hosts to avoid interactive prompt
+        ssh-keyscan -H ${{ steps.ec2-info.outputs.public_ip }} >> ~/.ssh/known_hosts 2>/dev/null || true
+        chmod 644 ~/.ssh/known_hosts
+        
+        # Verify SSH key format
+        if ! ssh-keygen -l -f ~/.ssh/ec2_key > /dev/null 2>&1; then
+          echo "❌ Invalid SSH key format" >> $GITHUB_STEP_SUMMARY
+          echo "Please check that EC2_SSH_PRIVATE_KEY secret contains a valid private key" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        
+        echo "✅ SSH key configured successfully" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Test SSH connection
+      env:
+        EC2_HOST: ${{ steps.ec2-info.outputs.public_ip }}
+      run: |
+        echo "Testing SSH connection to $EC2_USER@$EC2_HOST..."
+        
+        # Test SSH connection with verbose output for debugging
+        if ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 -v $EC2_USER@$EC2_HOST "echo 'SSH connection successful'" 2>&1; then
+          echo "✅ SSH connection test passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ SSH connection test failed" >> $GITHUB_STEP_SUMMARY
+          echo "Please verify:" >> $GITHUB_STEP_SUMMARY
+          echo "1. EC2_SSH_PRIVATE_KEY secret is correctly set in GitHub Secrets" >> $GITHUB_STEP_SUMMARY
+          echo "2. The corresponding public key is in ~/.ssh/authorized_keys on the EC2 instance" >> $GITHUB_STEP_SUMMARY
+          echo "3. Security group allows SSH (port 22) from GitHub Actions IPs" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
         
     - name: Copy deployment files to EC2
       env:
         EC2_HOST: ${{ steps.ec2-info.outputs.public_ip }}
       run: |
+        echo "Copying deployment files to EC2..."
+        
+        # Ensure target directories exist on EC2
+        ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST \
+          "mkdir -p $EC2_APP_DIR/scripts $EC2_APP_DIR/nginx"
+        
         # Copy docker-compose configuration
-        scp -i ~/.ssh/ec2_key docker-compose.prod.yml $EC2_USER@$EC2_HOST:$EC2_APP_DIR/
+        scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no \
+          docker-compose.prod.yml $EC2_USER@$EC2_HOST:$EC2_APP_DIR/ || {
+          echo "❌ Failed to copy docker-compose.prod.yml" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        }
         
         # Copy nginx configuration
-        scp -i ~/.ssh/ec2_key -r nginx $EC2_USER@$EC2_HOST:$EC2_APP_DIR/
+        scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no -r \
+          nginx $EC2_USER@$EC2_HOST:$EC2_APP_DIR/ || {
+          echo "❌ Failed to copy nginx configuration" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        }
         
         # Copy deployment script
-        scp -i ~/.ssh/ec2_key scripts/deploy-ec2.sh $EC2_USER@$EC2_HOST:$EC2_APP_DIR/scripts/
-        chmod +x $EC2_USER@$EC2_HOST:$EC2_APP_DIR/scripts/deploy-ec2.sh || true
+        scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no \
+          scripts/deploy-ec2.sh $EC2_USER@$EC2_HOST:$EC2_APP_DIR/scripts/ || {
+          echo "❌ Failed to copy deployment script" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        }
+        
+        # Make deployment script executable
+        ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST \
+          "chmod +x $EC2_APP_DIR/scripts/deploy-ec2.sh" || {
+          echo "⚠️ Failed to make script executable (non-critical)" >> $GITHUB_STEP_SUMMARY
+        }
+        
+        echo "✅ Deployment files copied successfully" >> $GITHUB_STEP_SUMMARY
         
     - name: Update environment variables on EC2
       env:
@@ -171,7 +230,7 @@ jobs:
         BACKEND_IMAGE: ${{ needs.build-and-push.outputs.backend_image }}
         FRONTEND_IMAGE: ${{ needs.build-and-push.outputs.frontend_image }}
       run: |
-        ssh -i ~/.ssh/ec2_key $EC2_USER@$EC2_HOST << 'EOF'
+        ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
         cd ${{ env.EC2_APP_DIR }}
         
         # Update image tags in environment file
@@ -185,7 +244,7 @@ jobs:
       env:
         EC2_HOST: ${{ steps.ec2-info.outputs.public_ip }}
       run: |
-        ssh -i ~/.ssh/ec2_key $EC2_USER@$EC2_HOST << 'EOF'
+        ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
         cd ${{ env.EC2_APP_DIR }}
         
         # Run deployment script
