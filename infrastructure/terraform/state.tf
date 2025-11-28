@@ -1,5 +1,5 @@
 # Terraform State Storage and Locking
-# Feature: 002-cicd-aws-terraform
+# Feature: simplify-aws-to-ec2
 
 # S3 Bucket for Terraform State
 resource "aws_s3_bucket" "terraform_state" {
@@ -67,63 +67,5 @@ resource "aws_s3_bucket_public_access_block" "terraform_state" {
 #   }
 # }
 
-# S3 Bucket for Frontend Hosting
-resource "aws_s3_bucket" "frontend" {
-  bucket = var.s3_bucket_name != "" ? var.s3_bucket_name : "${var.project_name}-${var.environment}-frontend-${random_string.frontend_bucket_suffix.result}"
-
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-frontend"
-    Environment = var.environment
-    Purpose     = "frontend-hosting"
-  }
-}
-
-# Random string for frontend S3 bucket suffix
-resource "random_string" "frontend_bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
-# S3 Bucket Public Access Block for Frontend
-resource "aws_s3_bucket_public_access_block" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-# S3 Bucket Website Configuration
-resource "aws_s3_bucket_website_configuration" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "error.html"
-  }
-}
-
-# S3 Bucket Policy for Public Read Access
-resource "aws_s3_bucket_policy" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "PublicReadGetObject"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.frontend.arn}/*"
-      }
-    ]
-  })
-
-  depends_on = [aws_s3_bucket_public_access_block.frontend]
-}
+# Note: Frontend S3 bucket removed - frontend is now served by nginx on EC2
+# See docker-compose.prod.yml and nginx/nginx.conf for new configuration

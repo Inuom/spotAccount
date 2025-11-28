@@ -1,20 +1,13 @@
 # Security Groups Configuration
-# Feature: 002-cicd-aws-terraform
+# Feature: simplify-aws-to-ec2
 
-# Security Group for ECS
-resource "aws_security_group" "ecs" {
-  name        = "${var.project_name}-${var.environment}-ecs-sg"
-  description = "Security group for ECS tasks"
-  vpc_id      = module.vpc.vpc_id
+# Security Group for EC2 Instance
+resource "aws_security_group" "ec2" {
+  name        = "${var.project_name}-${var.environment}-ec2-sg"
+  description = "Security group for EC2 instance running Docker containers"
+  vpc_id      = data.aws_vpc.default.id
 
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
+  # HTTPS from anywhere
   ingress {
     description = "HTTPS"
     from_port   = 443
@@ -23,42 +16,28 @@ resource "aws_security_group" "ecs" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # HTTP from anywhere (for Let's Encrypt challenges and redirect to HTTPS)
   ingress {
-    description = "Application port"
-    from_port   = var.app_port
-    to_port     = var.app_port
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.common_tags, {
-    Name        = "${var.project_name}-${var.environment}-ecs-sg"
-    Purpose     = "ecs-security"
-  })
-}
-
-# Security Group for RDS
-resource "aws_security_group" "rds" {
-  name        = "${var.project_name}-${var.environment}-rds-sg"
-  description = "Security group for RDS database"
-  vpc_id      = module.vpc.vpc_id
-
+  # SSH from specific IPs only (replace with your IP)
+  # For now, allowing from anywhere - should be restricted in production
   ingress {
-    description     = "PostgreSQL from ECS"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ecs.id]
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # TODO: Restrict to specific IP addresses
   }
 
+  # Allow all outbound traffic
   egress {
+    description = "All outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -66,7 +45,7 @@ resource "aws_security_group" "rds" {
   }
 
   tags = merge(var.common_tags, {
-    Name        = "${var.project_name}-${var.environment}-rds-sg"
-    Purpose     = "rds-security"
+    Name    = "${var.project_name}-${var.environment}-ec2-sg"
+    Purpose = "ec2-security"
   })
 }

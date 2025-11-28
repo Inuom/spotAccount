@@ -4,10 +4,12 @@ A full-stack web application for managing shared subscription costs among small 
 
 ## 🏗️ Architecture
 
-- **Backend**: NestJS with TypeScript, SQLite database, Prisma ORM
+- **Backend**: NestJS with TypeScript, PostgreSQL database, Prisma ORM
 - **Frontend**: Angular 17+ SPA with NgRx state management
-- **Infrastructure**: AWS Fargate + S3+CloudFront, Terraform IaC
-- **CI/CD**: GitHub Actions
+- **Infrastructure**: AWS EC2 (single instance) with Docker containers, Terraform IaC
+- **Deployment**: Docker Compose, Nginx reverse proxy, Let's Encrypt SSL
+- **CI/CD**: GitHub Actions with automated EC2 deployment
+- **Cost**: ~€12-15/month (optimized for small-scale deployments)
 
 ## 📋 Prerequisites
 
@@ -185,28 +187,54 @@ Once the backend is running, API documentation is available at:
 
 ## 🚢 Deployment
 
-### Infrastructure Setup
+This application uses a simplified, cost-effective AWS EC2 deployment (~€12-15/month).
+
+### Quick Deployment
+
+For automated deployment via GitHub Actions:
+
+1. Complete AWS setup (see [AWS Manual Actions Guide](docs/aws-manual-actions.md))
+2. Configure GitHub Secrets
+3. Push to master branch - automatic deployment via GitHub Actions
+
+### Manual Deployment
+
+For detailed step-by-step instructions, see the [EC2 Deployment Guide](docs/ec2-deployment-guide.md).
+
+#### Quick Start:
 
 ```bash
 cd infrastructure/terraform
 
 # Initialize Terraform
-terraform init
-
-# Plan deployment
-terraform plan
+terraform init \
+  -backend-config="bucket=spotaccount-terraform-state" \
+  -backend-config="key=terraform.tfstate" \
+  -backend-config="region=eu-west-1"
 
 # Apply infrastructure
-terraform apply
+terraform apply -var-file="production.tfvars"
+
+# Note the EC2 IP address from output
+# SSH into EC2 and run deployment script
+ssh -i key.pem ec2-user@<ec2-ip>
+cd /opt/spotaccount
+bash scripts/deploy-ec2.sh
 ```
 
-### Backend Deployment
+### Architecture
 
-The backend is deployed to AWS Fargate via GitHub Actions CI/CD pipeline.
+- **EC2 Instance**: Single t3.micro/t3.small instance running Docker containers
+- **Docker Compose**: Manages all services (backend, frontend, database, nginx)
+- **Nginx**: Reverse proxy with Let's Encrypt SSL
+- **PostgreSQL**: Containerized database with persistent volumes
+- **ECR**: Docker image registry for backend and frontend
 
-### Frontend Deployment
+### Documentation
 
-The frontend is deployed to S3+CloudFront via GitHub Actions CI/CD pipeline.
+- 📘 [EC2 Deployment Guide](docs/ec2-deployment-guide.md) - Complete deployment instructions
+- 🔧 [AWS Manual Actions](docs/aws-manual-actions.md) - AWS console setup guide
+- 🚀 [Quick Start](docs/ec2-deployment-guide.md#quick-start) - Get up and running fast
 
 ## 📝 Environment Variables
 
