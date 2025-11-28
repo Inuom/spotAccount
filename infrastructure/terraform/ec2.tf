@@ -38,11 +38,14 @@ resource "aws_instance" "main" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = var.ec2_instance_type
 
-  # Use default VPC's default subnet
-  subnet_id                   = data.aws_subnet.default.id
+  # Use default VPC's subnet (existing or created)
+  subnet_id                   = local.subnet_id
   vpc_security_group_ids      = [aws_security_group.ec2.id]
   associate_public_ip_address = true
 
+ # SSH Key Pair
+  key_name = "id_ed25519_gh"
+  
   # IAM role for EC2 (optional, for future use with ECR, CloudWatch, etc.)
   iam_instance_profile = aws_iam_instance_profile.ec2.name
 
@@ -88,10 +91,56 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# Get default subnet in the first availability zone
-data "aws_subnet" "default" {
-  vpc_id            = data.aws_vpc.default.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  default_for_az    = true
+# Get all subnets in the default VPC
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+# Get internet gateway for default VPC
+data "aws_internet_gateway" "default" {
+  filter {
+    name   = "attachment.vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+# Get default route table for default VPC
+data "aws_route_table" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+  
+  filter {
+    name   = "association.main"
+    values = ["true"]
+  }
+}
+
+# Create a public subnet for the EC2 instance
+# We always create our own subnet to ensure it exists and is properly configured
+resource "aws_subnet" "public" {
+  vpc_id                  = data.aws_vpc.default.id
+  cidr_block              = cidrsubnet(data.aws_vpc.default.cidr_block, 8, 0)
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-${var.environment}-public-subnet"
+  })
+}
+
+# Associate the created subnet with default route table
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = data.aws_route_table.default.id
+}
+
+# Use the subnet we created
+locals {
+  subnet_id = aws_subnet.public.id
 }
 
