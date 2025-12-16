@@ -32,6 +32,9 @@ COPY package*.json ./
 # Note: Prisma CLI will be available via npx from node_modules/.prisma
 RUN npm ci --only=production
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
