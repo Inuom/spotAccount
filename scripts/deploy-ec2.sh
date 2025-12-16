@@ -90,7 +90,7 @@ log "Waiting for backend to be healthy..."
 TIMEOUT=60
 ELAPSED=0
 while [ $ELAPSED -lt $TIMEOUT ]; do
-    if docker exec spotaccount-backend wget --quiet --tries=1 --spider http://localhost:3000/healthz 2>/dev/null; then
+    if docker exec spotaccount-backend wget --quiet --tries=1 --spider http://localhost:3000/api/health/healthz 2>/dev/null; then
         log "Backend is healthy"
         break
     fi

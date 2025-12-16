@@ -273,7 +273,7 @@ jobs:
         MAX_ATTEMPTS=30
         ATTEMPT=0
         while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-          if curl -f -s http://$EC2_HOST/healthz > /dev/null; then
+          if curl -f -s http://$EC2_HOST/api/health/healthz > /dev/null; then
             echo "✅ Health check passed" >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
