@@ -11,7 +11,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-spotaccount}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -21,6 +21,8 @@ services:
       retries: 5
     networks:
       - app-network
+    # Note: Currently not used - backend uses SQLite
+    # Keep this service for future migration to PostgreSQL
 
   backend:
     image: ${BACKEND_IMAGE:?BACKEND_IMAGE is required}
@@ -82,6 +84,8 @@ services:
 
 volumes:
   backend_data:
+    driver: local
+  postgres_data:
     driver: local
   certbot-etc:
     driver: local
