@@ -1,6 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: process.env['NG_APP_API_URL'] || 'https://api.your-domain.com/api',
+  // Use relative URL - nginx will proxy /api/ to backend
+  apiUrl: '/api',
   appName: 'Shared Subscription Debt Manager',
   version: '1.0.0',
   // Production-specific configuration
