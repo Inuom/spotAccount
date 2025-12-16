@@ -9,9 +9,14 @@ if [ -z "$DATABASE_URL" ]; then
   export DATABASE_URL="file:/app/prisma/dev.db"
 fi
 
-# For SQLite, ensure the database file exists
-# If it doesn't exist, Prisma will create it on first connection
-# The schema is already available in /app/prisma/schema.prisma
+# For SQLite, ensure the database directory exists
+mkdir -p /app/prisma
+
+# Run database migrations before starting
+echo "Running database migrations..."
+npx prisma migrate deploy || {
+  echo "WARNING: Database migration failed. Continuing anyway..."
+}
 
 echo "DATABASE_URL: $DATABASE_URL"
 
