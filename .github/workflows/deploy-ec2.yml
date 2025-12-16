@@ -248,6 +248,13 @@ jobs:
         sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}|" .env.production
         sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}|" .env.production
         
+        # Ensure CORS_ORIGIN is set to '*' if not already set or if it's the old template value
+        if ! grep -q "^CORS_ORIGIN=" .env.production 2>/dev/null; then
+          echo "CORS_ORIGIN=*" >> .env.production
+        elif grep -q "^CORS_ORIGIN=https://yourdomain.com" .env.production; then
+          sed -i "s|^CORS_ORIGIN=.*|CORS_ORIGIN=*|" .env.production
+        fi
+        
         echo "✅ Environment variables updated"
         EOF
         
