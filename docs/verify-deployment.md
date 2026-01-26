@@ -96,14 +96,17 @@ docker volume ls
 # - spotaccount_certbot-var
 ```
 
-### 6. Vérifier la Base de Données SQLite
+### 6. Vérifier la Base de Données PostgreSQL
 
 ```bash
-# Sur EC2
-docker exec spotaccount-backend ls -lh /app/prisma/
+# Sur EC2 - Vérifier que PostgreSQL est accessible
+docker exec spotaccount-postgres pg_isready -U postgres
 
-# Vérifier que prod.db existe
-docker exec spotaccount-backend ls -lh /app/prisma/prod.db
+# Vérifier les bases de données
+docker exec spotaccount-postgres psql -U postgres -c "\l"
+
+# Vérifier que spotaccount DB existe
+docker exec spotaccount-postgres psql -U postgres -d spotaccount -c "\dt"
 ```
 
 ### 7. Tester l'API Backend
@@ -192,9 +195,10 @@ docker logs -f spotaccount-nginx
 - [ ] `http://34.242.7.18/` : ✅ Frontend Angular chargé
 
 ### Base de Données
-- [ ] Fichier SQLite existe : `/app/prisma/prod.db`
-- [ ] Migrations appliquées
-- [ ] Base de données accessible depuis le backend
+- [ ] PostgreSQL container running : `spotaccount-postgres`
+- [ ] Database `spotaccount` exists
+- [ ] Migrations appliquées (tables created)
+- [ ] Backend connected to PostgreSQL (check health endpoint)
 
 ### Performance
 - [ ] Health check répond en < 2 secondes

@@ -19,26 +19,36 @@ A full-stack web application for managing shared subscription costs among small 
 
 ## 🚀 Quick Start
 
+**Prerequisites**: Docker Desktop must be running for PostgreSQL.
+
 ### Backend Setup
 
 ```bash
+# Start PostgreSQL container
+docker-compose up -d postgres
+
+# Navigate to backend
 cd backend
 
 # Install dependencies
 npm install
 
-# Copy environment file
-cp .env.example .env
-
-# Generate Prisma client and run migrations
+# Generate Prisma client
 npx prisma generate
-npx prisma migrate dev --name init
+
+# Populate database (migrations + seed)
+bash ../scripts/populate-db.sh
+# Or manually:
+# npx prisma migrate deploy  # Apply migrations
+# npx prisma db seed         # Create initial admin
 
 # Start development server
 npm run start:dev
 ```
 
 The backend API will be available at `http://localhost:3000/api`
+
+**Initial Admin**: `admin@example.com` / `0000` (change immediately)
 
 ### Frontend Setup
 
@@ -116,6 +126,9 @@ npm run lint           # Lint code
 ### Database Commands
 
 ```bash
+# Populate database (migrations + seed)
+bash scripts/populate-db.sh
+
 # Generate Prisma client
 npx prisma generate
 
@@ -124,6 +137,9 @@ npx prisma migrate dev --name migration_name
 
 # Apply migrations
 npx prisma migrate deploy
+
+# Run seed script
+npx prisma db seed
 
 # Open Prisma Studio (database GUI)
 npx prisma studio
@@ -240,7 +256,7 @@ bash scripts/deploy-ec2.sh
 
 ### Backend (.env)
 ```
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/spotaccount"
 JWT_SECRET="your-secret-key"
 JWT_EXPIRATION="24h"
 PORT=3000
@@ -282,7 +298,7 @@ For issues and questions, please open an issue in the GitHub repository.
 ## 📊 Current Status
 
 **Phase 2 Complete!** The application now has:
-- ✅ Backend API with NestJS + Prisma + SQLite
+- ✅ Backend API with NestJS + Prisma + PostgreSQL
 - ✅ JWT authentication and role-based authorization
 - ✅ Frontend with Angular 17 + NgRx state management
 - ✅ Health check endpoints (`/api/health`, `/api/health/db`)

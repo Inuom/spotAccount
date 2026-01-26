@@ -7,7 +7,16 @@
 
 ### 1. Setup Backend Database
 
+**Prerequisites**: Docker Desktop must be running (for PostgreSQL).
+
 ```bash
+# Start PostgreSQL container
+docker-compose up -d postgres
+
+# Wait for PostgreSQL to be ready (check logs if needed)
+docker-compose logs -f postgres
+
+# Navigate to backend directory
 cd backend
 
 # Install dependencies (if needed)
@@ -16,12 +25,24 @@ npm install
 # Generate Prisma client
 npx prisma generate
 
-# Create database and run migrations
-npx prisma migrate dev --name init
+# Populate database (run migrations + seed)
+# Option A: Using the populate script
+bash ../scripts/populate-db.sh
 
-# Create .env file from template
+# Option B: Manual steps
+npx prisma migrate deploy  # Apply migrations
+npx prisma db seed         # Create initial admin user
+
+# Create .env file from template (if not using Docker Compose)
 cp .env.example .env
 ```
+
+**Default DATABASE_URL** (when using Docker Compose):  
+`postgresql://postgres:postgres@localhost:5432/spotaccount`
+
+**Initial Admin Credentials**:  
+- Email: `admin@example.com`
+- Password: `0000` (change immediately after first login)
 
 ### 2. Start Backend Server
 
@@ -82,12 +103,13 @@ Expected response:
 - Use `@Roles(Role.ADMIN)` for admin-only routes
 
 ### Database
-- Prisma ORM configured
-- SQLite database ready
+- Prisma ORM configured with **PostgreSQL**
+- Docker Compose provides PostgreSQL 15 container
 - All entities defined:
   - User, Subscription, SubscriptionParticipant
-  - Charge, ChargeShare, Payment
-- Migrations ready to run
+  - Charge, ChargeShare, Payment, Invitation
+- Migrations and seed script ready
+- Populate script available: `scripts/populate-db.sh`
 
 ### Frontend
 - Angular 17 application ready

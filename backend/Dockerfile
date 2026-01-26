@@ -47,9 +47,7 @@ COPY --from=builder /app/prisma ./prisma
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create prisma directory and set default DATABASE_URL for SQLite
-# Can be overridden with -e DATABASE_URL when running the container
-ENV DATABASE_URL="file:/app/prisma/dev.db"
+# Set NODE_ENV (DATABASE_URL must be provided via environment)
 ENV NODE_ENV="production"
 
 # Expose port

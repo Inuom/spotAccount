@@ -105,10 +105,15 @@ if [ $ELAPSED -ge $TIMEOUT ]; then
     exit 1
 fi
 
-# Run database migrations (if needed)
+# Run database migrations and seed (backend entrypoint also runs these on startup)
 log "Running database migrations..."
 if ! docker exec spotaccount-backend npx prisma migrate deploy; then
     warning "Database migration failed or not needed"
+fi
+
+log "Running database seed (idempotent)..."
+if ! docker exec spotaccount-backend npx prisma db seed; then
+    warning "Database seed failed or not needed"
 fi
 
 # Clean up old images
