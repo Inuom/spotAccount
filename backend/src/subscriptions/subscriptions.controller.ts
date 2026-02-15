@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   Request,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SubscriptionsService } from './subscriptions.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
@@ -30,7 +31,10 @@ interface AuthenticatedRequest extends Request {
 @Controller('subscriptions')
 @UseGuards(JwtAuthGuard)
 export class SubscriptionsController {
-  constructor(private readonly subscriptionsService: SubscriptionsService) {}
+  constructor(
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post()
   @UseGuards(RolesGuard)
@@ -81,5 +85,31 @@ export class SubscriptionsController {
     @Request() req: AuthenticatedRequest,
   ) {
     return this.subscriptionsService.addParticipant(subscriptionId, addParticipantDto, req.user.id);
+  }
+
+  @Post(':id/share-token')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  generateShareToken(
+    @Param('id', ParseUUIDPipe) subscriptionId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const frontendBaseUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:4200';
+    return this.subscriptionsService.generateShareToken(
+      subscriptionId,
+      req.user.id,
+      frontendBaseUrl,
+    );
+  }
+
+  @Delete(':id/share-token')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  revokeShareToken(
+    @Param('id', ParseUUIDPipe) subscriptionId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.subscriptionsService.revokeShareToken(subscriptionId, req.user.id);
   }
 }

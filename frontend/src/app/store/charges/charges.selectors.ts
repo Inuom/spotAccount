@@ -49,3 +49,12 @@ export const selectGeneratedCharges = createSelector(
   (charges) => charges.filter(charge => charge.status === 'GENERATED')
 );
 
+export const selectChargesBySubscriptionId = (subscriptionId: string | null) =>
+  createSelector(
+    selectCharges,
+    (charges) =>
+      subscriptionId
+        ? charges.filter((c) => c.subscription_id === subscriptionId)
+        : []
+  );
+

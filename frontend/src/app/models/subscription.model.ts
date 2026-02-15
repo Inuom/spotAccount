@@ -8,6 +8,7 @@ export interface Subscription {
   start_date: string;
   end_date: string | null;
   is_active: boolean;
+  share_token?: string | null;
   created_at: string;
   updated_at: string;
   owner?: {

@@ -179,6 +179,42 @@ export const subscriptionsReducer = createReducer(
     loading: false,
     error,
   })),
+
+  // Generate Share Token
+  on(SubscriptionsActions.generateShareToken, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(SubscriptionsActions.generateShareTokenSuccess, (state, { subscriptionId, shareToken }) =>
+    subscriptionsAdapter.updateOne(
+      { id: subscriptionId, changes: { share_token: shareToken } },
+      { ...state, loading: false, error: null }
+    )
+  ),
+  on(SubscriptionsActions.generateShareTokenFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
+
+  // Revoke Share Token
+  on(SubscriptionsActions.revokeShareToken, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(SubscriptionsActions.revokeShareTokenSuccess, (state, { subscriptionId }) =>
+    subscriptionsAdapter.updateOne(
+      { id: subscriptionId, changes: { share_token: null } },
+      { ...state, loading: false, error: null }
+    )
+  ),
+  on(SubscriptionsActions.revokeShareTokenFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
   
   // Clear Error
   on(SubscriptionsActions.clearSubscriptionsError, (state) => ({

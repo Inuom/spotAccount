@@ -124,6 +124,38 @@ export const addParticipantFailure = createAction(
   props<{ error: string }>()
 );
 
+// Generate Share Token
+export const generateShareToken = createAction(
+  '[Subscriptions] Generate Share Token',
+  props<{ subscriptionId: string }>()
+);
+
+export const generateShareTokenSuccess = createAction(
+  '[Subscriptions] Generate Share Token Success',
+  props<{ subscriptionId: string; shareToken: string; shareableUrl: string }>()
+);
+
+export const generateShareTokenFailure = createAction(
+  '[Subscriptions] Generate Share Token Failure',
+  props<{ error: string }>()
+);
+
+// Revoke Share Token
+export const revokeShareToken = createAction(
+  '[Subscriptions] Revoke Share Token',
+  props<{ subscriptionId: string }>()
+);
+
+export const revokeShareTokenSuccess = createAction(
+  '[Subscriptions] Revoke Share Token Success',
+  props<{ subscriptionId: string }>()
+);
+
+export const revokeShareTokenFailure = createAction(
+  '[Subscriptions] Revoke Share Token Failure',
+  props<{ error: string }>()
+);
+
 // Clear Errors
 export const clearSubscriptionsError = createAction('[Subscriptions] Clear Error');
 

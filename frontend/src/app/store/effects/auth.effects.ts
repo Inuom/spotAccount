@@ -38,6 +38,11 @@ export class AuthEffects {
       tap(({ user, token }) => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
+        // Don't redirect if user is on a public page (use window.location - router may not be ready yet on initial load)
+        const path = typeof window !== 'undefined' ? window.location.pathname : this.router.url;
+        if (path.startsWith('/public/')) {
+          return;
+        }
         // Navigate based on user role
         if (user.role === 'ADMIN') {
           this.router.navigate(['/admin/dashboard']);
@@ -61,6 +66,11 @@ export class AuthEffects {
       tap(() => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        // Don't redirect if user is on a public page (use window.location - router may not be ready yet on initial load)
+        const path = typeof window !== 'undefined' ? window.location.pathname : this.router.url;
+        if (path.startsWith('/public/')) {
+          return;
+        }
         this.router.navigate(['/login']);
       })
     ), { dispatch: false }

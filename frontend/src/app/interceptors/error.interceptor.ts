@@ -9,9 +9,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
-        // Unauthorized - redirect to login
+        // Unauthorized - redirect to login (but not if on public page)
         localStorage.removeItem('token');
-        router.navigate(['/login']);
+        if (!router.url.startsWith('/public/')) {
+          router.navigate(['/login']);
+        }
       } else if (error.status === 403) {
         // Forbidden - redirect to appropriate page
         router.navigate(['/']);

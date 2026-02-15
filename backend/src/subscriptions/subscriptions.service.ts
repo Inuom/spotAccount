@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
@@ -348,5 +349,62 @@ export class SubscriptionsService {
       }
       return updatedSubscription;
     });
+  }
+
+  async generateShareToken(subscriptionId: string, adminUserId: string, frontendBaseUrl: string): Promise<{ shareToken: string; shareableUrl: string }> {
+    const subscription = await this.findOne(subscriptionId);
+    if (!subscription) {
+      throw new NotFoundException('Subscription not found');
+    }
+    // Only subscription owner (typically admin) can generate share token
+    if (subscription.owner_id !== adminUserId) {
+      throw new ForbiddenException('You can only generate share links for subscriptions you own');
+    }
+
+    let shareToken: string;
+    let attempts = 0;
+    const maxAttempts = 5;
+    do {
+      shareToken = randomUUID();
+      const existing = await this.prisma.subscription.findUnique({
+        where: { share_token: shareToken },
+      });
+      if (!existing) break;
+      attempts++;
+    } while (attempts < maxAttempts);
+
+    if (attempts >= maxAttempts) {
+      throw new BadRequestException('Failed to generate unique share token. Please try again.');
+    }
+
+    await this.prisma.subscription.update({
+      where: { id: subscriptionId },
+      data: { share_token: shareToken },
+    });
+
+    const shareableUrl = `${frontendBaseUrl}/public/subscription/${shareToken}`;
+    return { shareToken, shareableUrl };
+  }
+
+  async revokeShareToken(subscriptionId: string, adminUserId: string): Promise<void> {
+    const subscription = await this.findOne(subscriptionId);
+    if (!subscription) {
+      throw new NotFoundException('Subscription not found');
+    }
+    if (subscription.owner_id !== adminUserId) {
+      throw new ForbiddenException('You can only revoke share links for subscriptions you own');
+    }
+
+    await this.prisma.subscription.update({
+      where: { id: subscriptionId },
+      data: { share_token: null },
+    });
+  }
+
+  async findByShareToken(shareToken: string): Promise<Subscription | null> {
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { share_token: shareToken },
+    });
+    return subscription?.is_active ? subscription : null;
   }
 }

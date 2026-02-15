@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
@@ -18,10 +19,11 @@ import {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="users-container">
       <div class="header">
+        <a routerLink="/admin/dashboard" class="btn-back">← Dashboard</a>
         <h1>User Management</h1>
         <div class="header-actions">
           <button class="btn-secondary" (click)="showCreateUserModal = true">
@@ -183,6 +185,24 @@ import {
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+      gap: 1rem;
+    }
+
+    .btn-back {
+      background: #6c757d;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .btn-back:hover {
+      background: #5a6268;
+      color: white;
     }
 
     .header-actions {

@@ -46,5 +46,16 @@ export class SubscriptionService {
   addParticipant(subscriptionId: string, participant: AddParticipantDto): Observable<Subscription> {
     return this.apiService.post<Subscription>(`${this.endpoint}/${subscriptionId}/participants`, participant);
   }
+
+  generateShareToken(subscriptionId: string): Observable<{ shareToken: string; shareableUrl: string }> {
+    return this.apiService.post<{ shareToken: string; shareableUrl: string }>(
+      `${this.endpoint}/${subscriptionId}/share-token`,
+      {}
+    );
+  }
+
+  revokeShareToken(subscriptionId: string): Observable<void> {
+    return this.apiService.delete<void>(`${this.endpoint}/${subscriptionId}/share-token`);
+  }
 }
 

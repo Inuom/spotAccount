@@ -33,6 +33,13 @@ export class ApiService {
     });
   }
 
+  /** Public endpoint - no Authorization header (for shareable balance pages) */
+  getPublic<T>(endpoint: string): Observable<T> {
+    return this.http.get<T>(`${this.apiUrl}/${endpoint}`, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    });
+  }
+
   post<T>(endpoint: string, data: any): Observable<T> {
     const url = `${this.apiUrl}/${endpoint}`;
     const headers = this.getHeaders(true); // Use no-cache for POST requests

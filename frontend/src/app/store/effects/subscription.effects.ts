@@ -110,6 +110,36 @@ export class SubscriptionEffects {
     )
   );
 
+  generateShareToken$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(SubscriptionsActions.generateShareToken),
+      switchMap(({ subscriptionId }) =>
+        this.subscriptionService.generateShareToken(subscriptionId).pipe(
+          map(({ shareToken, shareableUrl }) =>
+            SubscriptionsActions.generateShareTokenSuccess({ subscriptionId, shareToken, shareableUrl })
+          ),
+          catchError((error) =>
+            of(SubscriptionsActions.generateShareTokenFailure({ error: error.message || 'Failed to generate share link' }))
+          )
+        )
+      )
+    )
+  );
+
+  revokeShareToken$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(SubscriptionsActions.revokeShareToken),
+      switchMap(({ subscriptionId }) =>
+        this.subscriptionService.revokeShareToken(subscriptionId).pipe(
+          map(() => SubscriptionsActions.revokeShareTokenSuccess({ subscriptionId })),
+          catchError((error) =>
+            of(SubscriptionsActions.revokeShareTokenFailure({ error: error.message || 'Failed to revoke share link' }))
+          )
+        )
+      )
+    )
+  );
+
   subscriptionsFailure$ = createEffect(() =>
     this.actions$.pipe(
       ofType(
@@ -120,7 +150,9 @@ export class SubscriptionEffects {
         SubscriptionsActions.updateSubscriptionFailure,
         SubscriptionsActions.deleteSubscriptionFailure,
         SubscriptionsActions.generateChargesFailure,
-        SubscriptionsActions.addParticipantFailure
+        SubscriptionsActions.addParticipantFailure,
+        SubscriptionsActions.generateShareTokenFailure,
+        SubscriptionsActions.revokeShareTokenFailure
       ),
       map(({ error }) => UiActions.setError({ error }))
     )

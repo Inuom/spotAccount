@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
@@ -17,10 +17,11 @@ import { selectUsers } from '../../../store/users/users.selectors';
 @Component({
   selector: 'app-subscriptions',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   template: `
     <div class="subscriptions-container">
       <div class="header">
+        <a routerLink="/admin/dashboard" class="btn-back">← Dashboard</a>
         <h1>Subscription Management</h1>
         <button (click)="toggleCreateForm()" class="btn-primary">
           {{ showCreateForm ? 'Cancel' : '+ Create Subscription' }}
@@ -220,6 +221,24 @@ import { selectUsers } from '../../../store/users/users.selectors';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+      gap: 1rem;
+    }
+
+    .btn-back {
+      background: #6c757d;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .btn-back:hover {
+      background: #5a6268;
+      color: white;
     }
 
     h1 {

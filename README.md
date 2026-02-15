@@ -193,6 +193,16 @@ Once the backend is running, API documentation is available at:
 3. **P2: User Payment Management** - Users manage their own pending payments
 4. **P3: View Balances and Reports** - Users and admins view balances as of a date
 
+### Public Subscription Balance Sharing
+
+Admins can generate shareable links for subscription balances so participants can view their debt status without logging in.
+
+- **Generate share link**: `POST /api/subscriptions/:id/share-token` (admin only)
+- **Revoke share link**: `DELETE /api/subscriptions/:id/share-token` (admin only)
+- **Public balance view**: `GET /api/public/subscription-balance/:shareToken` (no auth)
+- Share links are rate-limited (10 req/min per IP) and revocable at any time
+- Public view shows participant names and balances only—no emails or payment details
+
 ### Key Entities
 
 - **User**: System users with admin or user roles

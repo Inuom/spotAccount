@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, map } from 'rxjs';
 
@@ -20,10 +21,11 @@ import { selectUsers } from '../../../store/users/users.selectors';
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   template: `
     <div class="payments-container">
       <div class="header">
+        <a routerLink="/admin/dashboard" class="btn-back">← Dashboard</a>
         <h1>Payment Management</h1>
         <div class="header-actions">
           <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()" class="filter-select">
@@ -192,6 +194,24 @@ import { selectUsers } from '../../../store/users/users.selectors';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+      gap: 1rem;
+    }
+
+    .btn-back {
+      background: #6c757d;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .btn-back:hover {
+      background: #5a6268;
+      color: white;
     }
 
     .header h1 {

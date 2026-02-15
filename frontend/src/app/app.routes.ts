@@ -16,6 +16,11 @@ export const routes: Routes = [
     path: 'auth/setup-password',
     loadComponent: () => import('./pages/auth/setup-password/setup-password.component').then(m => m.SetupPasswordComponent)
   },
+  // Public route - must be before admin/user to avoid auth redirects
+  {
+    path: 'public/subscription/:shareToken',
+    loadComponent: () => import('./pages/public/public-subscription-balance/public-subscription-balance.component').then(m => m.PublicSubscriptionBalanceComponent)
+  },
   {
     path: 'admin',
     loadChildren: () => import('./pages/admin/admin.routes').then(m => m.ADMIN_ROUTES),
